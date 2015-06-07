@@ -2,3 +2,6 @@ plugins {
     id 'scala'
 }
 
+dependencies {
+    compile 'org.scala-lang:scala-library:2.11.6'
+}
