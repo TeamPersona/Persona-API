@@ -1,0 +1,16 @@
+plugins {
+    id 'play'
+}
+
+dependencies {
+    play project(':persona')
+    play 'commons-lang:commons-lang:2.6'
+    playTest "com.google.guava:guava:17.0"
+}
+
+repositories {
+    maven {
+        name = "typesafe-maven-release"
+        url = "https://repo.typesafe.com/typesafe/maven-releases"
+    }
+}

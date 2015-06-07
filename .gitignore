@@ -8,3 +8,7 @@
 
 # Gradle
 .gradle
+
+# Auto-generated folders
+build/
+logs/
