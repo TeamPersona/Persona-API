@@ -1,2 +1,4 @@
-rootProject.name = 'uwpib'
+include 'api', 'persona'
+
+rootProject.name = 'Persona API'
 
