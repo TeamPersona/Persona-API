@@ -1,6 +1,8 @@
-language: java
+language: scala
+scala:
+  - 2.11.6
 jdk:
-    - oraclejdk8
+  - oraclejdk8
 notifications:
-    slack:
-        secure: RCBWd78umgSP9y1IwCalIPBb0Klmn/z7B/OFbV0DNQlK1M3yTnaiBveKd8s4arYUES0iEX4sOODGpzl5L4+HYjlxE1f3t18Atof945YOMd6lzo7822HFl15KjbvrHBxlNV+EOjAqw7p51Gk4ZcD4vj3DTEB/Fl/igGzjfpXSn7o=
+  slack:
+    secure: BtxKIxg6flG6E6g5mNBBBJGn/AgVCkLzsS/48nIzqcEfabZW1ThHXCalKKHwSmp34w+IpgzSTZ4b5nA2YqVCKjzv2EjR12Fqinv5tOoZqJUJ4f2DvMFnEjXYnVV7EStNF5zkpcKmMcbdgkY32IGsPQohpMLut4OUE03emceLy8m2pezdJKervXFR6x0FrpMbaFRrQ6gquF4klaI0r+QFgVavdmUhdbPJa0Yj7c0mhBz67V8+oU0glyEiQXkk+4dt4HmzK8J/JpC+dD69o5EiQxu1r0dFuE2nDeVe1AjTgh/AmTqOTSvj1mW7wPnSKyRqgMNLlsD9u/BAlMXOIvspj+osYFtk0bfyVAKmDAVVKy+tEMg7+A4B7Pw5Jhp3ixwIPF+rJoW1tYW59qF4tPUau0ESmnP7G3K+obynLZWIwGfrRvML6MPYG2X8lhAMmwH30IJcPG06mEfpF9VYsj1Zmr6+lYGw2s7gY9jG9r0uJQD3QP10cVSl4E43mPPM2eWJzrQ9LbkqIDjghM6J4NfjGolzZ1nkOM+zTqhPQ09ZF205hDrkJ20/G1OocZaln7AgLet++onB3Fw7yTMfsKnV2iRvh2zO/gKZ6UHr/Yg1y1zB5j322M66KjKOM3akvad93VGZtwQwEbqbhieRyDKV9WEf0zMGFZpefFd8H1iBngE=
