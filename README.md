@@ -9,12 +9,14 @@ Setting Up
 ----------
 
 ### IntelliJ Idea
-1. From the project root, run "./gradlew idea"
-2. Open "Persona API.ipr"
-3. The next few steps may not happen in this exact order
-4. A dialog should pop up saying that the project layout needs to be converted.  Click convert
-5. In the IntelliJ event log (bottom right corner of the screen), click import gradle project and add root VCS.  A new dialog should pop up.  Ensure the following is set:
-    * Use auto-import is checked
-    * Use default gradle wrapper is selected
-    * Project format is ".idea (directory based)"
-6. Go to the project root and delete the folder "projectFilesBackup"
+1. Open up IntelliJ.  Click on "Import Project"
+2. Navigate to the "Persona-API" root folder
+3. Select "Import from existing sources" and check "SBT"
+    * You will have the option to download source and documentation.  I'd recommend it, but it's up to you
+4. Wait an eternity for IntelliJ to pull in all dependencies
+5. To have IntelliJ run/debug Play
+    * Go to Run -> Edit Configurations
+    * Click the '+' button.  Select SBT Task
+    * Name the configuration "Play"
+    * In "tasks" type "run"
+    * In "Before launch" remove "Make"

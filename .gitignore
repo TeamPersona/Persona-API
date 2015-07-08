@@ -4,13 +4,19 @@
 *.ipr
 *.iws
 
+# Vim
+*.swp
+
 # Mac
 .DS_Store
 
-# Gradle
-.gradle
-
-# Auto-generated folders
+# Play
 build/
+data/
+dist/
 logs/
+project/boot
+project/project
+project/plugins/target
+RUNNING_PID
 target/
