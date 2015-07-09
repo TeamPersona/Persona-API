@@ -11,7 +11,7 @@ Setting Up
 ### IntelliJ Idea
 1. Open up IntelliJ.  Click on "Import Project"
 2. Navigate to the "Persona-API" root folder
-3. Select "Import from existing sources" and check "SBT"
+3. Select "Import from existing sources" and check "SBT" (Make sure you have the Scala and SBT plugins installed)
     * You will have the option to download source and documentation.  I'd recommend it, but it's up to you
 4. Wait an eternity for IntelliJ to pull in all dependencies
 5. To have IntelliJ run/debug Play
