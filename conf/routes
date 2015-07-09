@@ -1,9 +1,11 @@
-# Routes
-# This file defines all application routes (Higher priority routes first)
-# ~~~~
+# Account
+GET     /api/account/information       persona.controllers.Accounts.listInformation
 
-# Home page
-GET     /                           controllers.Application.index
+# Authentication
+GET     /api/authorize                 persona.controllers.Authentication.authorize
 
-# Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+# Offers
+GET     /api/offer                     persona.controllers.Offers.list
+GET     /api/offer/:id                 persona.controllers.Offers.get(id: Long)
+POST    /api/offer/:id/participate     persona.controllers.Offers.participate(id: Long)
+

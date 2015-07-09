@@ -1,3 +1,5 @@
+package persona
+
 import org.junit.runner._
 import org.specs2.mutable._
 import org.specs2.runner._
@@ -15,8 +17,6 @@ class IntegrationSpec extends Specification {
     "work from within a browser" in new WithBrowser {
 
       browser.goTo("http://localhost:" + port)
-
-      browser.pageSource must contain("Hello, world!")
     }
   }
 }
