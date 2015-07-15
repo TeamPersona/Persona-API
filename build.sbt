@@ -15,6 +15,12 @@ libraryDependencies ++= Seq(
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+resolvers += Classpaths.sbtPluginReleases
+
+// Coveralls settings
+ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 70
+ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := false
+ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := true
 
 // Play provides two styles of routers, one expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.
