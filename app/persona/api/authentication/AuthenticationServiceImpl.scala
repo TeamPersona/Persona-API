@@ -1,5 +1,5 @@
 package persona.api.authentication
 
-class OAuthService extends AuthenticationService {
+class AuthenticationServiceImpl extends AuthenticationService {
   override def authenticate: Unit = ???
 }
