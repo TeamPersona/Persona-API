@@ -22,13 +22,13 @@ class FileDataSchemaLoader(
 
     val jsonFiles = dir.listFiles.filter(file => "json" == Files.getFileExtension(file.getName).toLowerCase)
 
-    val parsingTasks = jsonFiles.map { jsonFile =>
+    val schemas = jsonFiles.map { jsonFile =>
       val jsonFileContents = Source.fromFile(jsonFile).mkString
 
       parser.parse(jsonFileContents).get
     }
 
-    parsingTasks.toSeq
+    schemas.toSeq
   }
 
 }

@@ -20,8 +20,7 @@ class JsonDataSchemaParserSpec extends Specification {
           |      "name":"field1",
           |      "isRequired":false,
           |      "type":"int"
-          |    }
-          |  ]
+          |    }]
           |}
         """.stripMargin
 
@@ -49,8 +48,7 @@ class JsonDataSchemaParserSpec extends Specification {
           |      "name":"field2",
           |      "isRequired":true,
           |      "type":"string"
-          |    }
-          |  ]
+          |    }]
           |}
         """.stripMargin
 
