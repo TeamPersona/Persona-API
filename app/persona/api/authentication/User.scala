@@ -1,5 +1,7 @@
 package persona.api.authentication
 
-class User {
+import java.util.UUID
+
+class User(val id: UUID) {
 
 }

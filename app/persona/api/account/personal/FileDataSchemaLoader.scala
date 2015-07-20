@@ -1,23 +1,27 @@
 package persona.api.account.personal
 
-import java.io.File
+import java.io.{File, FileNotFoundException}
 import java.nio.file.NotDirectoryException
+import javax.inject.Inject
 
 import com.google.common.io.Files
+import com.google.inject.name.Named
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
-class FileDataSchemaLoader(
-  directory: String,
-  parser: DataSchemaParser)(
-  implicit executionContext: ExecutionContext) extends DataSchemaLoader {
+class FileDataSchemaLoader @Inject() (
+  @Named("DataSchemaDirectory") directory: String,
+  parser: DataSchemaParser) extends DataSchemaLoader {
 
-  def load: Future[Seq[DataSchema]] = Future {
+  def load: Seq[DataSchema] =  {
     val dir = new File(directory)
 
+    if(!dir.exists()) {
+      throw new FileNotFoundException("Couldn't find schema directory: " + directory)
+    }
+
     if(!dir.isDirectory) {
-      throw new NotDirectoryException(directory)
+      throw new NotDirectoryException("Schema directory is not a directory: " + directory)
     }
 
     val jsonFiles = dir.listFiles.filter(file => "json" == Files.getFileExtension(file.getName).toLowerCase)

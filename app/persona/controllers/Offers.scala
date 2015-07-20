@@ -1,5 +1,6 @@
 package persona.controllers
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
 import persona.api.authentication.User
@@ -41,7 +42,7 @@ class Offers @Inject() (offerService: OfferService) extends Controller {
       // Check if we found the offer
       maybeOffer map { offer =>
         // Now try participating in the offer
-        val participateInOffer = offer.participate(new User)
+        val participateInOffer = offer.participate(new User(UUID.randomUUID()))
 
         participateInOffer map { maybeResult =>
           // Check if we successfully joined the offer

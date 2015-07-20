@@ -11,13 +11,13 @@ import scala.util.Try
 
 class JsonDataSchemaParser @Inject() extends DataSchemaParser {
 
-  implicit val fieldDescriptorJsonReader: Reads[FieldDescriptor] = (
+  private implicit val fieldDescriptorJsonReader: Reads[FieldDescriptor] = (
       (JsPath \ "name").read[String] and
       (JsPath \ "isRequired").read[Boolean] and
       (JsPath \ "type").read[String]
     )(FieldDescriptor.apply _)
 
-  implicit val dataSchemaJsonReader: Reads[DataSchema] = (
+  private implicit val dataSchemaJsonReader: Reads[DataSchema] = (
       (JsPath \ "category").read[String] and
       (JsPath \ "subcategory").read[String] and
       (JsPath \ "fields").read[Seq[FieldDescriptor]]

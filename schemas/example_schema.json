@@ -1,0 +1,12 @@
+{
+    "category":"exampleCategory", 
+    "subcategory":"exampleSubcategory", 
+    "fields": [
+        {
+            "name":"exampleField", 
+            "isRequired":true, 
+            "type":"int"
+        }
+    ]
+}
+

@@ -5,8 +5,13 @@ class DataSchema private(
   val subcategory: String,
   fieldDescriptors: Map[String, FieldDescriptor]) {
 
+  if(category.isEmpty || subcategory.isEmpty) {
+    throw new InvalidSchemaException("Data schema is incorrectly categorized")
+  }
+
+  // TODO: Figure out how to properly validate things
   if(fieldDescriptors.isEmpty) {
-    throw new InvalidSchemaException("Data schema " + (category, subcategory).toString + " has no fields")
+    throw new InvalidSchemaException("Data schema has no fields")
   }
 
   private[this] val requiredFields = fieldDescriptors.filter(descriptor => descriptor._2.isRequired).keys
