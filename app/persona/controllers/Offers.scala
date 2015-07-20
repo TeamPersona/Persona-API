@@ -3,7 +3,6 @@ package persona.controllers
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
-import persona.api.authentication.User
 import persona.api.offer.OfferService
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
@@ -12,7 +11,7 @@ import play.api.mvc._
 import scala.concurrent.Future
 
 @Singleton
-class Offers @Inject() (offerService: OfferService) extends Controller {
+class Offers @Inject()(offerService: OfferService) extends Controller {
 
   def list = Action.async {
     offerService.list map { option =>
@@ -42,7 +41,7 @@ class Offers @Inject() (offerService: OfferService) extends Controller {
       // Check if we found the offer
       maybeOffer map { offer =>
         // Now try participating in the offer
-        val participateInOffer = offer.participate(new User(UUID.randomUUID()))
+        val participateInOffer = offer.participate()
 
         participateInOffer map { maybeResult =>
           // Check if we successfully joined the offer

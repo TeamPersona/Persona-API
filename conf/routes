@@ -2,7 +2,7 @@
 GET     /api/account/information       persona.controllers.Accounts.listInformation
 
 # Authentication
-GET     /api/authorize                 persona.controllers.Authentication.authorize
+GET     /api/authenticate                 persona.controllers.Authentication.authenticate
 
 # Offers
 GET     /api/offer                     persona.controllers.Offers.list
