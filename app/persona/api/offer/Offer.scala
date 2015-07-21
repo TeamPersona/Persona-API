@@ -9,7 +9,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
 
-class Offer (val id: UUID,          // This is a timeUUID that has the exact time it was created
+case class Offer (val id: UUID,          // This is a timeUUID that has the exact time it was created
              creationDay: DateTime, // TODO: may have to change to string type/check to match Cassandra
              description: String,
              expirationTime: DateTime,

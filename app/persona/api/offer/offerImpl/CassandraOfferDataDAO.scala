@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class OfferDataTable extends CassandraTable[OfferDataTable, Offer] {
 
   object creationDay extends StringColumn(this) with PartitionKey[String]
-  object timeID extends TimeUUIDColumn(this) with ClusteringOrder[UUID] with Descending // TODO: will have to change to UUID when can guet UUID in Routes
+  object timeID extends TimeUUIDColumn(this) with ClusteringOrder[UUID] with Descending
   object description extends StringColumn(this)
   object expirationTime extends DateTimeColumn(this)
   object currentParticipants extends IntColumn(this)
@@ -24,7 +24,7 @@ class OfferDataTable extends CassandraTable[OfferDataTable, Offer] {
   object criteria extends MapColumn[OfferDataTable, Offer, String, String](this)
 
   def fromRow(row: Row): Offer = {
-    new Offer(                      // TODO: possibly remove the new
+    Offer(                      // TODO: possibly remove the new
       timeID(row),
       DateTime.parse(creationDay(row)), // TODO: format?
       description(row),
