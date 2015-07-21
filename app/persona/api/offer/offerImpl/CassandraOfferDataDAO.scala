@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class OfferDataTable extends CassandraTable[OfferDataTable, Offer] {
 
   object creationDay extends StringColumn(this) with PartitionKey[String]
-  object timeID extends StringColumn(this) with ClusteringOrder[String] with Descending // TODO: will have to change to UUID when can guet UUID in Routes
+  object timeID extends TimeUUIDColumn(this) with ClusteringOrder[UUID] with Descending // TODO: will have to change to UUID when can guet UUID in Routes
   object description extends StringColumn(this)
   object expirationTime extends DateTimeColumn(this)
   object currentParticipants extends IntColumn(this)
@@ -25,7 +25,7 @@ class OfferDataTable extends CassandraTable[OfferDataTable, Offer] {
 
   def fromRow(row: Row): Offer = {
     new Offer(                      // TODO: possibly remove the new
-      timeID(row).toString,
+      timeID(row),
       DateTime.parse(creationDay(row)), // TODO: format?
       description(row),
       expirationTime(row),
@@ -49,7 +49,7 @@ class CassandraOfferDataDAO extends OfferDataTable with OfferDAO with SimpleCass
       .map(_.toSeq)
   }
 
-  def get(id: String)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+  def get(id: UUID)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
     select.where(_.timeID eqs id)
       .fetch
       .map(_.toSeq)
