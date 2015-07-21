@@ -10,7 +10,6 @@ import org.joda.time.DateTime
 import persona.api.offer.Offer
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class OfferDataTable extends CassandraTable[OfferDataTable, Offer] {
@@ -43,14 +42,14 @@ class OfferDataTable extends CassandraTable[OfferDataTable, Offer] {
 class CassandraOfferDataDAO extends OfferDataTable with OfferDAO with SimpleCassandraConnector {
 
   // TODO:limit actually 25 for these two?
-  def list: Future[Seq[Offer]] = {
+  def list(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
     select
       .limit(25)
       .fetch
       .map(_.toSeq)
   }
 
-  def get(id: String): Future[Seq[Offer]] = {
+  def get(id: String)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
     select.where(_.timeID eqs id)
       .fetch
       .map(_.toSeq)

@@ -7,6 +7,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[CassandraOfferDataDAO])
 trait OfferDAO {
-  def list: Future[Seq[Offer]]
-  def get(id: String): Future[Seq[Offer]]
+  def list(implicit ec: ExecutionContext): Future[Seq[Offer]]
+  def get(id: String)(implicit ec: ExecutionContext): Future[Seq[Offer]]
 }
