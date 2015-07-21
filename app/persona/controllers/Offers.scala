@@ -24,7 +24,7 @@ class Offers @Inject() (offerService: OfferService) extends Controller {
     }
   }
 
-  def get(id: Long) = Action.async {
+  def get(id: String) = Action.async {
     offerService.get(id) map { option =>
       option map { offer =>
         Ok(JsString("Listing offer " + offer.id))
@@ -34,7 +34,7 @@ class Offers @Inject() (offerService: OfferService) extends Controller {
     }
   }
 
-  def participate(id: Long) = Action.async {
+  def participate(id: String) = Action.async {
     // First, retrieve the offer
     val retrieveOffer = offerService.get(id)
 
