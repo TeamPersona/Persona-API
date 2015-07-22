@@ -1,7 +1,5 @@
 package persona.api.offer.offerImpl
 
-import java.util.UUID
-
 import org.joda.time.DateTime
 
 import persona.util.ParseException
