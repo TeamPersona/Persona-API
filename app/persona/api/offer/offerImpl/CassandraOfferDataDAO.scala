@@ -49,10 +49,9 @@ class CassandraOfferDataDAO extends OfferDataTable with OfferDAO with SimpleCass
       .map(_.toSeq)
   }
 
-  def get(id: UUID)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+  def get(id: UUID)(implicit ec: ExecutionContext): Future[Option[Offer]] = {
     select.where(_.timeID eqs id)
-      .fetch
-      .map(_.toSeq)
+      .one()
   }
 
   // TODO:  actually implement this
