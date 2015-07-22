@@ -3,7 +3,6 @@ package persona.api.offer.offerImpl
 import java.util.UUID
 
 import org.joda.time.DateTime
-import persona.api.offer.Offer
 
 import persona.util.ParseException
 import play.api.libs.functional.syntax._
@@ -19,7 +18,6 @@ class JsonOfferParser {
     )(OfferCriterionDescriptor.apply _)
 
   private implicit val offerJsonReader: Reads[OfferSchema] = (
-    (JsPath \ "id").read[UUID] and
       (JsPath \ "creationDay").read[DateTime] and
       (JsPath \ "description").read[String] and
       (JsPath \ "expirationTime").read[DateTime] and
@@ -29,10 +27,10 @@ class JsonOfferParser {
       (JsPath \ "criteria").read[Seq[OfferCriterionDescriptor]]
     )(OfferSchema.apply _)
 
-  def parse(value: String): Try[Offer] = {
+  def parse(value: String): Try[OfferSchema] = {
     Try {
-      Json.parse(value).validate[Offer] match {
-        case s: JsSuccess[Offer] => s.get
+      Json.parse(value).validate[OfferSchema] match {
+        case s: JsSuccess[OfferSchema] => s.get
         case e: JsError => throw new ParseException("Could not convert json to offer")
       }
     }
