@@ -10,7 +10,7 @@ import play.api.libs.json._
 
 class JsonOfferWriter {
 
-  private implicit val offerJsonWriter = (
+  private implicit val offerJsonWriter: Writes[Offer] = (
     (JsPath \ "id").write[UUID] and
       (JsPath \ "creationDay").write[DateTime] and
       (JsPath \ "description").write[String] and
