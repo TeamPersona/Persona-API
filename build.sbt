@@ -7,12 +7,14 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 scalaVersion := "2.11.7"
 
 val phantomVersion = "1.9.10"
+val scalazVersion = "7.1.3"
 
 libraryDependencies ++= Seq(
   jdbc,
   cache,
   ws,
   specs2 % Test,
+  "org.scalaz" %% "scalaz-core" % scalazVersion,
   "com.websudos" %% "phantom-dsl" % phantomVersion,
   "com.websudos" %% "phantom-testkit" % phantomVersion
 )

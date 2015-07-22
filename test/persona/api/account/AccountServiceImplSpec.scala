@@ -23,15 +23,9 @@ class AccountServiceImplSpec extends PlaySpecification with Mockito {
       val personalDataDao = mock[PersonalDataDAO]
       personalDataDao.listInformation(any[User])(any[ExecutionContext]) returns Future.successful(Seq(testDataItem))
 
-      val validSchema = mock[DataSchema]
-      validSchema.category returns "testCategory"
-      validSchema.subcategory returns "testSubCategory"
-      validSchema.validate(any[DataItem]) returns true
+      val dataItemValidator = mock[DataItemValidator]
 
-      val schemaLoader = mock[DataSchemaLoader]
-      schemaLoader.load returns Seq(validSchema)
-
-      val accountService = new AccountServiceImpl(personalDataDao, schemaLoader)
+      val accountService = new AccountServiceImpl(personalDataDao, dataItemValidator)
       val futureInformation = accountService.listInformation(mock[User])
 
       val information = await(futureInformation)
@@ -49,39 +43,10 @@ class AccountServiceImplSpec extends PlaySpecification with Mockito {
       val personalDataDao = mock[PersonalDataDAO]
       personalDataDao.listInformation(any[User])(any[ExecutionContext]) returns Future.successful(Seq(testDataItem))
 
-      val validSchema = mock[DataSchema]
-      validSchema.category returns "testCategory"
-      validSchema.subcategory returns "testSubCategory"
-      validSchema.validate(any[DataItem]) returns false
+      val dataItemValidator = mock[DataItemValidator]
+      dataItemValidator.ensureValid(any[DataItem]) throws new InvalidDataException("Corrupted data")
 
-      val schemaLoader = mock[DataSchemaLoader]
-      schemaLoader.load returns Seq(validSchema)
-
-      val accountService = new AccountServiceImpl(personalDataDao, schemaLoader)
-      val futureInformation = accountService.listInformation(mock[User])
-
-      await(futureInformation) must throwAn[InvalidDataException]
-    }
-
-    "detect missing data schemas" in {
-      import scala.concurrent.ExecutionContext.Implicits.global
-
-      val testDataItem = mock[DataItem]
-      testDataItem.category returns "nonExistentCategory"
-      testDataItem.subcategory returns "nonExistentSubcategory"
-
-      val personalDataDao = mock[PersonalDataDAO]
-      personalDataDao.listInformation(any[User])(any[ExecutionContext]) returns Future.successful(Seq(testDataItem))
-
-      val validSchema = mock[DataSchema]
-      validSchema.category returns "testCategory"
-      validSchema.subcategory returns "testSubCategory"
-      validSchema.validate(any[DataItem]) returns true
-
-      val schemaLoader = mock[DataSchemaLoader]
-      schemaLoader.load returns Seq(validSchema)
-
-      val accountService = new AccountServiceImpl(personalDataDao, schemaLoader)
+      val accountService = new AccountServiceImpl(personalDataDao, dataItemValidator)
       val futureInformation = accountService.listInformation(mock[User])
 
       await(futureInformation) must throwAn[InvalidDataException]

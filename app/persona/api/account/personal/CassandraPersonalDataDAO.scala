@@ -1,6 +1,7 @@
 package persona.api.account.personal
 
 import java.util.UUID
+import javax.inject.Inject
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
@@ -30,7 +31,7 @@ class PersonalDataTable extends CassandraTable[PersonalDataTable, DataItem] {
 
 }
 
-class CassandraPersonalDataDAO extends PersonalDataTable with PersonalDataDAO with SimpleCassandraConnector {
+class CassandraPersonalDataDAO @Inject() extends PersonalDataTable with PersonalDataDAO with SimpleCassandraConnector {
 
   // TODO: Remember to shut down manager
   def listInformation(user: User)(implicit ec: ExecutionContext): Future[Seq[DataItem]] = {

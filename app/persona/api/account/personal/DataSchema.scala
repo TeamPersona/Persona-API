@@ -1,39 +1,61 @@
 package persona.api.account.personal
 
+import scalaz.Scalaz._
+import scalaz.Unapply._
+import scalaz.ValidationNel
+
 class DataSchema private(
   val category: String,
   val subcategory: String,
   fieldDescriptors: Map[String, FieldDescriptor]) {
 
-  if(category.isEmpty || subcategory.isEmpty) {
-    throw new InvalidSchemaException("Data schema is incorrectly categorized")
-  }
+  require(category != null && !category.isEmpty)
+  require(subcategory != null && !category.isEmpty)
+  require(fieldDescriptors != null && fieldDescriptors.nonEmpty)
 
-  // TODO: Figure out how to properly validate things
-  if(fieldDescriptors.isEmpty) {
-    throw new InvalidSchemaException("Data schema has no fields")
-  }
-
-  private[this] val requiredFields = fieldDescriptors.filter(descriptor => descriptor._2.isRequired).keys
+  val requiredFields = fieldDescriptors.filter(descriptor => descriptor._2.isRequired).values
 
   def this(category: String, subcategory:String, fields: Seq[FieldDescriptor]) = {
     this(category, subcategory, fields.map(field => field.name -> field).toMap)
   }
 
-  def validate(item: DataItem): Boolean = {
-    hasAllRequiredFields(item) && meetsConstraints(item)
-  }
-
-  private[this] def meetsConstraints(item: DataItem): Boolean = {
-    item.data.forall { field =>
-      val fieldDescriptor = fieldDescriptors.get(field._1)
-
-      fieldDescriptor.exists(descriptor => descriptor.validate(field._2))
+  def validate(item: DataItem): ValidationNel[DataItemValidationError, DataItem] = {
+    (hasAllRequiredFields(item) |@| meetsConstraints(item)) { (_, _) =>
+      item
     }
   }
 
-  private[this] def hasAllRequiredFields(item: DataItem): Boolean = {
-    requiredFields.forall(field => item.data.contains(field))
+  private[this] def meetsConstraints(item: DataItem): ValidationNel[DataItemValidationError, _] = {
+    val constraintValidation = item.data map { field =>
+      val fieldName = field._1
+      val fieldValue = field._2
+      val maybeFieldDescriptor = fieldDescriptors.get(fieldName)
+
+      maybeFieldDescriptor map { fieldDescriptor =>
+        fieldDescriptor.validate(fieldValue)
+      } getOrElse {
+        new InvalidFieldError(this, fieldName).failureNel
+      }
+    }
+
+    // List[ValidationNel[DataItemValidationError, _]] -> ValidationNel[DataItemValidationError, _]
+    // IntelliJ is probably going to complain about this.  Don't worry, it's wrong
+    constraintValidation.toList.sequenceU
+  }
+
+  private[this] def hasAllRequiredFields(item: DataItem): ValidationNel[DataItemValidationError, _] = {
+    val requiredFieldsValidation = requiredFields map { requiredField =>
+      if (item.data.contains(requiredField.name)) {
+        item.successNel
+      }
+      else {
+        new MissingRequiredFieldError(requiredField).failureNel
+      }
+    }
+
+    // List[ValidationNel[DataItemValidationError, _]] -> ValidationNel[DataItemValidationError, _]
+    // IntelliJ is probably going to complain about this.  Don't worry, it's wrong
+    requiredFieldsValidation.toList.sequenceU
   }
 }
 
