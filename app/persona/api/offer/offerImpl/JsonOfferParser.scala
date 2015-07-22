@@ -13,7 +13,12 @@ import play.api.libs.json._
 import scala.util.Try
 
 class JsonOfferParser {
-  private implicit val offerJsonReader: Reads[Offer] = (
+  private implicit val offerCriterionJsonReader: Reads[OfferCriterionDescriptor] = (
+    (JsPath \ "criterionCategory").read[String] and
+      (JsPath \ "criterion").read[String]
+    )(OfferCriterionDescriptor.apply _)
+
+  private implicit val offerJsonReader: Reads[OfferSchema] = (
     (JsPath \ "id").read[UUID] and
       (JsPath \ "creationDay").read[DateTime] and
       (JsPath \ "description").read[String] and
@@ -21,8 +26,8 @@ class JsonOfferParser {
       (JsPath \ "currentParticipants").read[Int] and
       (JsPath \ "maxParticipants").read[Int] and
       (JsPath \ "value").read[Double] and
-      (JsPath \ "criteria").read[Map[String, String]] //TODO: might not work as expected... can't read in JSON to maps directly
-    )(Offer.apply _)
+      (JsPath \ "criteria").read[Seq[OfferCriterionDescriptor]]
+    )(OfferSchema.apply _)
 
   def parse(value: String): Try[Offer] = {
     Try {
