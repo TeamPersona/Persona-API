@@ -1,6 +1,7 @@
 package persona.api.offer.offerImpl
 
 import org.joda.time.DateTime
+import persona.api.offer.Offer
 
 // TODO: add in checking to make sure they are valid criteria
 class OfferSchema private (val creationDay: DateTime,
@@ -11,6 +12,9 @@ class OfferSchema private (val creationDay: DateTime,
                             value: Double,
                             criteriaDescriptors: Seq[OfferCriterionDescriptor]) {
 
+  def validate(offer: Offer): Boolean = {
+    ???
+  }
 }
 
 object OfferSchema {

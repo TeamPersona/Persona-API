@@ -24,7 +24,7 @@ class OfferDataTable extends CassandraTable[OfferDataTable, Offer] {
   object criteria extends MapColumn[OfferDataTable, Offer, String, String](this)
 
   def fromRow(row: Row): Offer = {
-    Offer(                      // TODO: possibly remove the new
+    Offer(
       timeID(row),
       DateTime.parse(creationDay(row)), // TODO: format?
       description(row),

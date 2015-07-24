@@ -7,6 +7,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[OfferServiceImpl])
 trait OfferService {
-  def list(implicit ec: ExecutionContext): Future[Option[Seq[Offer]]]
+  def list(implicit ec: ExecutionContext): Future[Seq[Offer]]
   def get(id: UUID)(implicit ec: ExecutionContext): Future[Option[Offer]]
 }

@@ -14,14 +14,21 @@ import scala.concurrent.Future
 @Singleton
 class Offers @Inject() (offerService: OfferService) extends Controller {
 
+//  def list = Action.async {
+//    offerService.list map { option =>
+//      option map { offers =>
+//        Ok(JsString("Listing offers!"))
+//      } getOrElse {
+//        InternalServerError
+//      }
+//    }
+//  }
+
   def list = Action.async {
-    offerService.list map { option =>
-      option map { offers =>
+    val offers = offerService.list
+      offers map {offer =>
         Ok(JsString("Listing offers!"))
-      } getOrElse {
-        InternalServerError
       }
-    }
   }
 
   def get(id: UUID) = Action.async {
