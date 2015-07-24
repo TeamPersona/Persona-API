@@ -10,6 +10,8 @@ import play.api.libs.json._
 import scala.util.Try
 
 class JsonOfferParser {
+  implicit val DefaultJodaDateReads = Reads.jodaDateReads("yyyy-MM-dd")
+
   private implicit val offerCriterionJsonReader: Reads[OfferCriterionDescriptor] = (
     (JsPath \ "criterionCategory").read[String] and
       (JsPath \ "criterion").read[String]
