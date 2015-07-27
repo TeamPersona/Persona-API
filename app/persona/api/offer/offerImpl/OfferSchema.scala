@@ -1,7 +1,8 @@
 package persona.api.offer.offerImpl
 
+
 import org.joda.time.DateTime
-import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
+
 import persona.api.offer.Offer
 
 // TODO: add in checking to make sure they are valid criteria
