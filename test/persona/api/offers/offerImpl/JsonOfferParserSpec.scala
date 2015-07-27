@@ -14,9 +14,9 @@ class JsonOfferParserSpec extends Specification{
       val json =
         """
           |{
-          |  "creationDay":"2006-02-28",
+          |  "creationDay":1437090963326,
           |  "description":"desc",
-          |  "expirationTime":"2007-03-13",
+          |  "expirationTime":1437090963326,
           |  "currentParticipants":2,
           |  "maxParticipants":10,
           |  "value":3.50,
@@ -32,9 +32,9 @@ class JsonOfferParserSpec extends Specification{
             tryDataSchema.isSuccess must beTrue
 
             val dataSchema = tryDataSchema.get
-            dataSchema.creationDay.toString mustEqual "2006-02-28T00:00:00.000-05:00"
+            dataSchema.creationDay mustEqual new DateTime(1437090963326L)
             dataSchema.description mustEqual "desc"
-            dataSchema.expirationTime.toString mustEqual "2007-03-13T00:00:00.000-04:00"
+            dataSchema.expirationTime mustEqual new DateTime(1437090963326L)
             dataSchema.currentParticipants mustEqual 2
             dataSchema.maxParticipants mustEqual 10
             dataSchema.value mustEqual 3.50
