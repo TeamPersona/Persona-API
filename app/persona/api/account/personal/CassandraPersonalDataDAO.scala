@@ -1,13 +1,13 @@
 package persona.api.account.personal
 
 import java.util.UUID
-import javax.inject.Inject
 
 import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl.{context => _, _}
 import com.websudos.phantom.keys.PartitionKey
 import persona.api.authentication.User
+import persona.db.PersonaCassandraConnector
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -18,6 +18,8 @@ class PersonalDataTable extends CassandraTable[PersonalDataTable, DataItem] {
   object category extends StringColumn(this)
   object subcategory extends StringColumn(this)
   object data extends MapColumn[PersonalDataTable, DataItem, String, String](this)
+
+  override def tableName = "personal"
 
   def fromRow(row: Row): DataItem = {
     DataItem(
@@ -31,16 +33,12 @@ class PersonalDataTable extends CassandraTable[PersonalDataTable, DataItem] {
 
 }
 
-class CassandraPersonalDataDAO @Inject() extends PersonalDataTable with PersonalDataDAO with SimpleCassandraConnector {
+class CassandraPersonalDataDAO extends PersonalDataTable with PersonalDataDAO with PersonaCassandraConnector {
 
-  // TODO: Remember to shut down manager
   def listInformation(user: User)(implicit ec: ExecutionContext): Future[Seq[DataItem]] = {
     select.where(_.user_id eqs user.id)
           .fetch
           .map(_.toSeq)
   }
-
-  // TODO: Actually implement this
-  implicit def keySpace: KeySpace = KeySpace("persona")
 
 }

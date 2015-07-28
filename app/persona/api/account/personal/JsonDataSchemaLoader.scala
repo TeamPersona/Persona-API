@@ -5,15 +5,16 @@ import java.nio.file.NotDirectoryException
 import javax.inject.Inject
 
 import com.google.common.io.Files
-import com.google.inject.name.Named
+import play.api.Configuration
 
 import scala.io.Source
 
 class JsonDataSchemaLoader @Inject() (
-  @Named("DataSchemaDirectory") directory: String,
-  parser: DataSchemaParser) extends DataSchemaLoader {
+  parser: DataSchemaParser,
+  configuration: Configuration) extends DataSchemaLoader {
 
-  val schemaDir = new File(directory)
+  val schemaDirName = configuration.getString("persona.data.schemaDirectory").get
+  val schemaDir = new File(schemaDirName)
 
   if(!schemaDir.exists()) {
     throw new FileNotFoundException("Couldn't find schema directory " + schemaDir.getAbsolutePath)
