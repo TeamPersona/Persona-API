@@ -2,9 +2,11 @@ package persona.api.account.personal
 
 import com.google.inject.ImplementedBy
 
-import scala.concurrent.Future
+sealed class InvalidSchemaException(message: String) extends RuntimeException(message)
 
-@ImplementedBy(classOf[FileDataSchemaLoader])
+@ImplementedBy(classOf[JsonDataSchemaLoader])
 trait DataSchemaLoader {
-  def load: Future[Seq[DataSchema]]
+
+  def load: Seq[DataSchema]
+
 }

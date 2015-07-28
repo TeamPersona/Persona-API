@@ -3,7 +3,6 @@ package persona.api.account.personal
 import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
-import persona.util.ParseException
 
 @RunWith(classOf[JUnitRunner])
 class JsonDataSchemaParserSpec extends Specification {
@@ -24,10 +23,10 @@ class JsonDataSchemaParserSpec extends Specification {
           |}
         """.stripMargin
 
-      val tryDataSchema = new JsonDataSchemaParser().parse(json)
-      tryDataSchema.isSuccess must beTrue
+      val maybeDataSchema = new JsonDataSchemaParser().parse(json)
+      maybeDataSchema.isSuccess must beTrue
 
-      val dataSchema = tryDataSchema.get
+      val dataSchema = maybeDataSchema.toOption.get
       dataSchema.category mustEqual "test"
       dataSchema.subcategory mustEqual "subtest"
     }
@@ -52,24 +51,29 @@ class JsonDataSchemaParserSpec extends Specification {
           |}
         """.stripMargin
 
-      val tryDataSchema = new JsonDataSchemaParser().parse(json)
-      tryDataSchema.isSuccess must beTrue
+      val maybeDataSchema = new JsonDataSchemaParser().parse(json)
+      maybeDataSchema.isSuccess must beTrue
 
-      val dataSchema = tryDataSchema.get
+      val dataSchema = maybeDataSchema.toOption.get
       dataSchema.category mustEqual "test"
       dataSchema.subcategory mustEqual "subtest"
     }
   }
 
-  "throw exception for invalid json" in {
+  "fail to parse invalid json" in {
     val json = "{"
 
-    val tryDataSchema = new JsonDataSchemaParser().parse(json)
-    tryDataSchema.isFailure must beTrue
-    tryDataSchema.get must throwAn[Exception]
+    val maybeDataSchema = new JsonDataSchemaParser().parse(json)
+
+    maybeDataSchema.disjunction.leftMap { dataSchemaParseErrors =>
+      dataSchemaParseErrors.size mustEqual 1
+      dataSchemaParseErrors.head must beAnInstanceOf[BadFormatError]
+    }
+
+    maybeDataSchema.isSuccess must beFalse
   }
 
-  "throw exception for json missing required field" in {
+  "fail to parse json missing required fields" in {
     val json =
       """
         |{
@@ -77,9 +81,14 @@ class JsonDataSchemaParserSpec extends Specification {
         |}
       """.stripMargin
 
-    val tryDataSchema = new JsonDataSchemaParser().parse(json)
-    tryDataSchema.isFailure must beTrue
-    tryDataSchema.get must throwA[ParseException]
+    val maybeDataSchema = new JsonDataSchemaParser().parse(json)
+
+    maybeDataSchema.disjunction.leftMap { dataSchemaParseErrors =>
+      dataSchemaParseErrors.size mustEqual 1
+      dataSchemaParseErrors.head must beAnInstanceOf[ValidationError]
+    }
+
+    maybeDataSchema.isSuccess must beFalse
   }
 
 }

@@ -25,11 +25,23 @@ class FieldDescriptorSpec extends Specification {
     }
 
     "throw exception for unknown type" in {
-      FieldDescriptor("name", false, "unknown_type") must throwAn[UnknownTypeException]
+      FieldDescriptor("name", false, "unknown_type") must throwAn[IllegalArgumentException]
     }
 
     "validate data" in {
-      FieldDescriptor("name", true, "int").validate("123") must beTrue
+      val validation = FieldDescriptor("name", true, "int").validate("123")
+      validation.isSuccess must beTrue
+    }
+
+    "validate invalid data" in {
+      val validation = FieldDescriptor("name", true, "int").validate("abc")
+
+      validation.disjunction.leftMap { dataItemValidationErrors =>
+        dataItemValidationErrors.size mustEqual 1
+        dataItemValidationErrors.head must beAnInstanceOf[TypeMismatchError]
+      }
+
+      validation.isSuccess must beFalse
     }
   }
 
