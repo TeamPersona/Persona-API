@@ -8,6 +8,7 @@ import com.websudos.phantom.dsl.{context => _, _}
 import com.websudos.phantom.keys.PartitionKey
 import org.joda.time.DateTime
 import persona.api.offer.Offer
+import persona.db.PersonaCassandraConnector
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,8 +40,7 @@ class OfferDataTable extends CassandraTable[OfferDataTable, Offer] {
 }
 
 
-class CassandraOfferDataDAO extends OfferDataTable with OfferDAO with SimpleCassandraConnector {
-
+class CassandraOfferDataDAO extends OfferDataTable with OfferDAO with PersonaCassandraConnector  {
   // TODO:limit actually 25 for these two?
   def list(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
     select
@@ -49,11 +49,12 @@ class CassandraOfferDataDAO extends OfferDataTable with OfferDAO with SimpleCass
       .map(_.toSeq)
   }
 
-  def get(id: UUID)(implicit ec: ExecutionContext): Future[Option[Offer]] = {
-    select.where(_.timeID eqs id)
+  def get(id: UUID, creationDay: String)(implicit ec: ExecutionContext): Future[Option[Offer]] = {
+    select
+      .where(_.creationDay eqs creationDay)
+      .and(_.timeID eqs id)
       .one()
   }
 
-  // TODO:  actually implement this
-  implicit def keySpace: KeySpace = KeySpace("persona")
 }
+

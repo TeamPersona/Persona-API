@@ -11,4 +11,3 @@ object OfferCriterionDescriptor {
     new OfferCriterionDescriptor(criterionCategory, criterion)
   }
 }
-
