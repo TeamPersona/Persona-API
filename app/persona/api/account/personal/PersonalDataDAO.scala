@@ -1,6 +1,7 @@
 package persona.api.account.personal
 
 import com.google.inject.ImplementedBy
+import com.websudos.phantom.dsl._
 import persona.api.authentication.User
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -9,5 +10,6 @@ import scala.concurrent.{ExecutionContext, Future}
 trait PersonalDataDAO {
 
   def listInformation(user: User)(implicit ec: ExecutionContext): Future[Seq[DataItem]]
+  def saveInformation(dataItem: DataItem)(implicit ec: ExecutionContext): Future[ResultSet]
 
 }

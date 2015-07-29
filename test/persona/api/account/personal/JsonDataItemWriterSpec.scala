@@ -28,7 +28,7 @@ class JsonDataItemWriterSpec extends Specification with Mockito {
         """.stripMargin
 
       val dataItem = mock[DataItem]
-      dataItem.ownerID returns UUID.fromString("fb93dda6-7e1f-439c-a249-0d4c22252858")
+      dataItem.userID returns UUID.fromString("fb93dda6-7e1f-439c-a249-0d4c22252858")
       dataItem.creationTime returns new DateTime(1437090963326L)
       dataItem.category returns "testCategory"
       dataItem.subcategory returns "testSubcategory"
@@ -53,13 +53,51 @@ class JsonDataItemWriterSpec extends Specification with Mockito {
         """.stripMargin
 
       val dataItem = mock[DataItem]
-      dataItem.ownerID returns UUID.fromString("fb93dda6-7e1f-439c-a249-0d4c22252858")
+      dataItem.userID returns UUID.fromString("fb93dda6-7e1f-439c-a249-0d4c22252858")
       dataItem.creationTime returns new DateTime(1437090963326L)
       dataItem.category returns "testCategory"
       dataItem.subcategory returns "testSubcategory"
       dataItem.data returns Map("testField1" -> "testValue1", "testField2" -> "testValue2")
 
       new JsonDataItemWriter().toJson(dataItem) mustEqual Json.parse(expectedJson)
+    }
+
+    "write multiple data items" in {
+      val expectedJson =
+        """
+          |[
+          |  {
+          |    "owner":"fb93dda6-7e1f-439c-a249-0d4c22252858",
+          |    "creationTime":1437090963326,
+          |    "category":"testCategory",
+          |    "subcategory":"testSubcategory",
+          |    "data": {
+          |      "testField1":"testValue1",
+          |      "testField2":"testValue2"
+          |    }
+          |  },
+          |  {
+          |    "owner":"fb93dda6-7e1f-439c-a249-0d4c22252858",
+          |    "creationTime":1437090963326,
+          |    "category":"testCategory",
+          |    "subcategory":"testSubcategory",
+          |    "data": {
+          |      "testField1":"testValue1",
+          |      "testField2":"testValue2"
+          |    }
+          |  }
+          |]
+          |
+        """.stripMargin
+
+      val dataItem = mock[DataItem]
+      dataItem.userID returns UUID.fromString("fb93dda6-7e1f-439c-a249-0d4c22252858")
+      dataItem.creationTime returns new DateTime(1437090963326L)
+      dataItem.category returns "testCategory"
+      dataItem.subcategory returns "testSubcategory"
+      dataItem.data returns Map("testField1" -> "testValue1", "testField2" -> "testValue2")
+
+      new JsonDataItemWriter().toJson(Seq(dataItem, dataItem)) mustEqual Json.parse(expectedJson)
     }
   }
 

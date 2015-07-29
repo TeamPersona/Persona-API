@@ -5,7 +5,7 @@ import java.util.UUID
 import org.joda.time.DateTime
 
 case class DataItem (
-  ownerID: UUID,
+  userID: UUID,
   creationTime: DateTime,
   category: String,
   subcategory: String,

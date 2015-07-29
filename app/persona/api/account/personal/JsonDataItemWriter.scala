@@ -18,4 +18,6 @@ class JsonDataItemWriter {
 
   def toJson(dataItem: DataItem): JsValue = Json.toJson(dataItem)
 
+  def toJson(dataItems: Seq[DataItem]): JsValue = Json.toJson(dataItems)
+
 }

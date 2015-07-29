@@ -3,6 +3,7 @@ package persona.api.account.personal
 import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
+import persona.util.{BadFormatError, ValidationError}
 
 @RunWith(classOf[JUnitRunner])
 class JsonDataSchemaParserSpec extends Specification {

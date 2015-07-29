@@ -1,14 +1,11 @@
 package persona.api.account.personal
 
 import com.google.inject.ImplementedBy
+import persona.util.PersonaError
 
 import scalaz.ValidationNel
 
-sealed trait DataItemValidationError {
-
-  def errorMessage: String
-
-}
+sealed trait DataItemValidationError extends PersonaError
 
 sealed class InvalidCategoryError(
   category: String,
