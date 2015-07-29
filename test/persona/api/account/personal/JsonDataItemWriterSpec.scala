@@ -17,7 +17,6 @@ class JsonDataItemWriterSpec extends Specification with Mockito {
       val expectedJson =
         """
           |{
-          |  "owner":"fb93dda6-7e1f-439c-a249-0d4c22252858",
           |  "creationTime":1437090963326,
           |  "category":"testCategory",
           |  "subcategory":"testSubcategory",
@@ -41,7 +40,6 @@ class JsonDataItemWriterSpec extends Specification with Mockito {
       val expectedJson =
         """
           |{
-          |  "owner":"fb93dda6-7e1f-439c-a249-0d4c22252858",
           |  "creationTime":1437090963326,
           |  "category":"testCategory",
           |  "subcategory":"testSubcategory",
@@ -67,7 +65,6 @@ class JsonDataItemWriterSpec extends Specification with Mockito {
         """
           |[
           |  {
-          |    "owner":"fb93dda6-7e1f-439c-a249-0d4c22252858",
           |    "creationTime":1437090963326,
           |    "category":"testCategory",
           |    "subcategory":"testSubcategory",
@@ -77,7 +74,6 @@ class JsonDataItemWriterSpec extends Specification with Mockito {
           |    }
           |  },
           |  {
-          |    "owner":"fb93dda6-7e1f-439c-a249-0d4c22252858",
           |    "creationTime":1437090963326,
           |    "category":"testCategory",
           |    "subcategory":"testSubcategory",
