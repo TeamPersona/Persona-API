@@ -5,7 +5,7 @@ import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import persona.api.offer.offerImpl._
-import persona.util.ParseException
+import persona.util.ValidationError
 
 @RunWith(classOf[JUnitRunner])
 class JsonOfferParserSpec extends Specification{
@@ -31,7 +31,7 @@ class JsonOfferParserSpec extends Specification{
             val tryDataSchema = new JsonOfferParser().parse(json)
             tryDataSchema.isSuccess must beTrue
 
-            val dataSchema = tryDataSchema.get
+            val dataSchema = tryDataSchema.toOption.get
             dataSchema.creationDay mustEqual new DateTime(1437090963326L)
             dataSchema.description mustEqual "desc"
             dataSchema.expirationTime mustEqual new DateTime(1437090963326L)
@@ -65,21 +65,13 @@ class JsonOfferParserSpec extends Specification{
       val tryDataSchema = new JsonOfferParser().parse(json)
       tryDataSchema.isSuccess must beTrue
 
-      val dataSchema = tryDataSchema.get
+      val dataSchema = tryDataSchema.toOption.get
       dataSchema.creationDay mustEqual new DateTime(1437090963326L)
       dataSchema.description mustEqual "desc"
       dataSchema.expirationTime mustEqual new DateTime(1437090963326L)
       dataSchema.currentParticipants mustEqual 2
       dataSchema.maxParticipants mustEqual 10
       dataSchema.value mustEqual 3.50
-    }
-
-    "throw exception for invalid json" in {
-      val json = "{"
-
-      val tryDataSchema = new JsonOfferParser().parse(json)
-      tryDataSchema.isFailure must beTrue
-      tryDataSchema.get must throwAn[Exception]
     }
 
     "throw exception for json missing required field" in {
@@ -91,8 +83,13 @@ class JsonOfferParserSpec extends Specification{
         """.stripMargin
 
       val tryDataSchema = new JsonOfferParser().parse(json)
-      tryDataSchema.isFailure must beTrue
-      tryDataSchema.get must throwA[ParseException]
+
+      tryDataSchema.disjunction.leftMap { parseErrors =>
+        parseErrors.size mustEqual 1
+        parseErrors.head must beAnInstanceOf[ValidationError]
+      }
+
+        tryDataSchema.isSuccess must beFalse
     }
   }
 }

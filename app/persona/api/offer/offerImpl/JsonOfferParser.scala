@@ -2,12 +2,14 @@ package persona.api.offer.offerImpl
 
 import org.joda.time.DateTime
 
-import persona.util.ParseException
+import persona.util.{ValidationError, ParseError}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
-import scala.util.Try
+
+import scalaz.Scalaz._
+import scalaz.ValidationNel
 
 class JsonOfferParser {
   implicit val DefaultJodaDateReads = Reads.jodaDateReads("yyyy-MM-dd")
@@ -27,12 +29,14 @@ class JsonOfferParser {
       (JsPath \ "criteria").read[Seq[OfferCriterionDescriptor]]
     )(OfferSchema.apply _)
 
-  def parse(value: String): Try[OfferSchema] = {
-    Try {
+  def parse(value: String): ValidationNel[ParseError, OfferSchema] = {
       Json.parse(value).validate[OfferSchema] match {
-        case s: JsSuccess[OfferSchema] => s.get
-        case e: JsError => throw new ParseException("Could not convert json to offer")
+        case s: JsSuccess[OfferSchema] => s.get.successNel
+        case e: JsError =>
+          val errorsAsJson = JsError.toJson(e)
+          val errorsAsString = Json.stringify(errorsAsJson)
+
+          new ValidationError(errorsAsString).failureNel
       }
-    }
   }
 }
