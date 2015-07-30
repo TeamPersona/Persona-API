@@ -3,6 +3,7 @@ package persona.api.account.personal
 import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
+import persona.util.{BadFormatError, ValidationError}
 
 @RunWith(classOf[JUnitRunner])
 class JsonDataSchemaParserSpec extends Specification {
@@ -58,37 +59,37 @@ class JsonDataSchemaParserSpec extends Specification {
       dataSchema.category mustEqual "test"
       dataSchema.subcategory mustEqual "subtest"
     }
-  }
 
-  "fail to parse invalid json" in {
-    val json = "{"
+    "fail to parse invalid json" in {
+      val json = "{"
 
-    val maybeDataSchema = new JsonDataSchemaParser().parse(json)
+      val maybeDataSchema = new JsonDataSchemaParser().parse(json)
 
-    maybeDataSchema.disjunction.leftMap { dataSchemaParseErrors =>
-      dataSchemaParseErrors.size mustEqual 1
-      dataSchemaParseErrors.head must beAnInstanceOf[BadFormatError]
+      maybeDataSchema.disjunction.leftMap { dataSchemaParseErrors =>
+        dataSchemaParseErrors.size mustEqual 1
+        dataSchemaParseErrors.head must beAnInstanceOf[BadFormatError]
+      }
+
+      maybeDataSchema.isSuccess must beFalse
     }
 
-    maybeDataSchema.isSuccess must beFalse
-  }
+    "fail to parse json missing required fields" in {
+      val json =
+        """
+          |{
+          |  "category":"test"
+          |}
+        """.stripMargin
 
-  "fail to parse json missing required fields" in {
-    val json =
-      """
-        |{
-        |  "category":"test"
-        |}
-      """.stripMargin
+      val maybeDataSchema = new JsonDataSchemaParser().parse(json)
 
-    val maybeDataSchema = new JsonDataSchemaParser().parse(json)
+      maybeDataSchema.disjunction.leftMap { dataSchemaParseErrors =>
+        dataSchemaParseErrors.size mustEqual 1
+        dataSchemaParseErrors.head must beAnInstanceOf[ValidationError]
+      }
 
-    maybeDataSchema.disjunction.leftMap { dataSchemaParseErrors =>
-      dataSchemaParseErrors.size mustEqual 1
-      dataSchemaParseErrors.head must beAnInstanceOf[ValidationError]
+      maybeDataSchema.isSuccess must beFalse
     }
-
-    maybeDataSchema.isSuccess must beFalse
   }
 
 }

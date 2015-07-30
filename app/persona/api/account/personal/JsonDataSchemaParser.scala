@@ -2,6 +2,7 @@ package persona.api.account.personal
 
 import javax.inject.Inject
 
+import persona.util.{BadFormatError, ParseError, ValidationError}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
@@ -24,7 +25,7 @@ class JsonDataSchemaParser @Inject() extends DataSchemaParser {
       (JsPath \ "fields").read[Seq[FieldDescriptor]]
     )(DataSchema.apply _)
 
-  def parse(value: String): ValidationNel[DataSchemaParseError, DataSchema] = {
+  def parse(value: String): ValidationNel[ParseError, DataSchema] = {
     val maybeJson = Try(Json.parse(value))
 
     maybeJson map { json =>

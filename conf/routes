@@ -1,5 +1,6 @@
 # Account
 GET     /api/account/information       persona.controllers.Accounts.listInformation
+POST    /api/account/information       persona.controllers.Accounts.saveInformation
 
 # Authentication
 GET     /api/authorize                 persona.controllers.Authentication.authorize
