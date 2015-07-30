@@ -2,10 +2,9 @@
 GET     /api/account/information       persona.controllers.Accounts.listInformation
 
 # Authentication
-GET     /api/authenticate                 persona.controllers.Authentication.authenticate
+GET     /api/authenticate              persona.controllers.Authentication.authenticate
 
 # Offers
 GET     /api/offer                     persona.controllers.Offers.list
 GET     /api/offer/:id                 persona.controllers.Offers.get(id: Long)
 POST    /api/offer/:id/participate     persona.controllers.Offers.participate(id: Long)
-

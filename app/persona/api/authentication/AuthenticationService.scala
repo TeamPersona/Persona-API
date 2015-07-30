@@ -1,37 +1,27 @@
 package persona.api.authentication
 
 import com.google.inject.ImplementedBy
-import play.api.mvc.RequestHeader
+import com.mohiva.play.silhouette.api.services.IdentityService
+import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
+import persona.model.authentication.User
 
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[AuthenticationServiceImpl])
-trait AuthenticationService {
+trait AuthenticationService extends IdentityService[User] {
+  /**
+   * Saves a user
+   *
+   * @param user user to save
+   * @return saved user
+   */
+  def save(user: User): Future[User]
 
   /**
-   * Find a profile that matches the userId
+   * Save profile for a user
    *
-   * @param userId user ID
-   * @param providerId provider ID
-   * @return profile if found
+   * @param profile profile to save
+   * @return updated user
    */
-  def find(providerId: String, userId: String): Future[Option[BaseProfile]]
-
-  /**
-   * Returns password information given a user
-   *
-   * @param user
-   * @return password information if found
-   */
-  def getPasswordInfo(user: User): Future[Option[Password]]
-
-  /**
-   * Update password information given a user
-   *
-   * @param user
-   * @param password
-   * @return optional user profile
-   */
-  def updatePasswordInfo(user: User, password: Password): Future[Option[BaseProfile]]
-
+  def save(profile: CommonSocialProfile): Future[User]
 }

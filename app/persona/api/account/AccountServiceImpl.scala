@@ -3,7 +3,7 @@ package persona.api.account
 import javax.inject.Inject
 
 import persona.api.account.personal._
-import persona.api.authentication.User
+import persona.model.authentication.User
 
 import scala.concurrent.{ExecutionContext, Future}
 

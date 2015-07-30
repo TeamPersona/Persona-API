@@ -1,44 +1,38 @@
 package persona.api.authentication
 
-import scala.collection.immutable.HashMap
+
+import java.util.UUID
+
+import com.google.inject.Inject
+import com.mohiva.play.silhouette.api.LoginInfo
+import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
+import persona.model.authentication.User
+import persona.model.dao.authentication.UserDAO
+
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AuthenticationServiceImpl extends AuthenticationService {
+class AuthenticationServiceImpl @Inject()(userDAO: UserDAO) extends AuthenticationService {
 
-  /**
-   * Mapping from (providerId, userId) to User
-   *
-   * @todo Static mapping for now
-   *       DB support will be added later
-   */
-  var users: Map[(String, String), User] = HashMap[(String, String), User](
-    ("userpass", "test1") -> new User(new BaseProfile("userpass", "test1", Some(Password(null, "123")))),
-    ("userpass", "test2") -> new User(new BaseProfile("userpass", "test2", Some(Password(null, "123")))),
-    ("userpass", "test3") -> new User(new BaseProfile("userpass", "test3", Some(Password(null, "123"))))
-  )
+  override def save(user: User): Future[User] = userDAO.save(user)
 
-  override def find(providerId: String, userId: String): Future[Option[BaseProfile]] = {
-    val result =
-      for (
-        user <- users.values;
-        profile <- user.profiles.find(u => u.providerId == providerId && u.userId == userId)
-      ) yield {
-        profile
-      }
-    Future.successful(result.headOption)
-  }
-
-  override def getPasswordInfo(user: User): Future[Option[Password]] = {
-    Future.successful {
-      for (
-        found <- users.values.find(u => u.mainProfile.providerId == user.mainProfile.providerId
-          && u.mainProfile.userId == user.mainProfile.userId);
-        profile <- found.profiles.find(_.providerId == UsernamePasswordProvider.UsernamePasswordId)
-      ) yield {
-        profile.password.get
-      }
+  override def save(profile: CommonSocialProfile): Future[User] = {
+    userDAO.find(profile.loginInfo).flatMap {
+      case Some(user) =>
+        userDAO.save(user.copy(
+          name = profile.fullName,
+          email = profile.email
+        ))
+      case None =>
+        userDAO.save(User(
+          userId = UUID.randomUUID(),
+          loginInfo = profile.loginInfo,
+          name = profile.fullName,
+          email = profile.email
+        ))
     }
   }
 
-  override def updatePasswordInfo(user: User, password: Password): Future[Option[BaseProfile]] = ???
+  override def retrieve(loginInfo: LoginInfo): Future[Option[User]] = userDAO.find(loginInfo)
+
 }

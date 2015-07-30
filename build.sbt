@@ -6,7 +6,7 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.11.7"
 
-val phantomVersion = "1.9.10"
+val phantomVersion = "1.10.0"
 val scalazVersion = "7.1.3"
 
 libraryDependencies ++= Seq(
@@ -16,7 +16,11 @@ libraryDependencies ++= Seq(
   specs2 % Test,
   "org.scalaz" %% "scalaz-core" % scalazVersion,
   "com.websudos" %% "phantom-dsl" % phantomVersion,
-  "com.websudos" %% "phantom-testkit" % phantomVersion
+  "com.websudos" %% "phantom-testkit" % phantomVersion,
+  "com.mohiva" %% "play-silhouette" % "3.0.0",
+  "com.mohiva" %% "play-silhouette-testkit" % "3.0.0" % "test",
+  "net.codingwell" %% "scala-guice" % "4.0.0",
+  "net.ceedubs" %% "ficus" % "1.1.2"
 )
 
 resolvers ++= Seq(
@@ -30,6 +34,7 @@ resolvers ++= Seq(
   "Java.net Maven2 Repository" at "http://download.java.net/maven/2/",
   "Twitter Repository" at "http://maven.twttr.com",
   "Websudos releases" at "https://dl.bintray.com/websudos/oss-releases/",
+  "Atlassian Releases" at "https://maven.atlassian.com/public/",
   Classpaths.sbtPluginReleases
 )
 

@@ -1,7 +1,7 @@
 package persona.api.account.personal
 
 import com.google.inject.ImplementedBy
-import persona.api.authentication.User
+import persona.model.authentication.User
 
 import scala.concurrent.{ExecutionContext, Future}
 
