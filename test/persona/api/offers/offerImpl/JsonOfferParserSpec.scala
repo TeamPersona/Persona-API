@@ -28,16 +28,16 @@ class JsonOfferParserSpec extends Specification{
           |}
         """.stripMargin
 
-            val tryDataSchema = new JsonOfferParser().parse(json)
-            tryDataSchema.isSuccess must beTrue
+            val tryOfferSchema = new JsonOfferParser().parse(json)
+      tryOfferSchema.isSuccess must beTrue
 
-            val dataSchema = tryDataSchema.toOption.get
-            dataSchema.creationDay mustEqual new DateTime(1437090963326L)
-            dataSchema.description mustEqual "desc"
-            dataSchema.expirationTime mustEqual new DateTime(1437090963326L)
-            dataSchema.currentParticipants mustEqual 2
-            dataSchema.maxParticipants mustEqual 10
-            dataSchema.value mustEqual 3.50
+            val offerSchema = tryOfferSchema.toOption.get
+            offerSchema.creationDay mustEqual new DateTime(1437090963326L)
+            offerSchema.description mustEqual "desc"
+            offerSchema.expirationTime mustEqual new DateTime(1437090963326L)
+            offerSchema.currentParticipants mustEqual 2
+            offerSchema.maxParticipants mustEqual 10
+            offerSchema.value mustEqual 3.50
     }
 
     "parse json with multiple criterion" in {
@@ -62,16 +62,16 @@ class JsonOfferParserSpec extends Specification{
           |}
         """.stripMargin
 
-      val tryDataSchema = new JsonOfferParser().parse(json)
-      tryDataSchema.isSuccess must beTrue
+      val tryOfferSchema = new JsonOfferParser().parse(json)
+      tryOfferSchema.isSuccess must beTrue
 
-      val dataSchema = tryDataSchema.toOption.get
-      dataSchema.creationDay mustEqual new DateTime(1437090963326L)
-      dataSchema.description mustEqual "desc"
-      dataSchema.expirationTime mustEqual new DateTime(1437090963326L)
-      dataSchema.currentParticipants mustEqual 2
-      dataSchema.maxParticipants mustEqual 10
-      dataSchema.value mustEqual 3.50
+      val offerSchema = tryOfferSchema.toOption.get
+      offerSchema.creationDay mustEqual new DateTime(1437090963326L)
+      offerSchema.description mustEqual "desc"
+      offerSchema.expirationTime mustEqual new DateTime(1437090963326L)
+      offerSchema.currentParticipants mustEqual 2
+      offerSchema.maxParticipants mustEqual 10
+      offerSchema.value mustEqual 3.50
     }
 
     "throw exception for json missing required field" in {
@@ -82,14 +82,14 @@ class JsonOfferParserSpec extends Specification{
           |}
         """.stripMargin
 
-      val tryDataSchema = new JsonOfferParser().parse(json)
+      val tryOfferSchema = new JsonOfferParser().parse(json)
 
-      tryDataSchema.disjunction.leftMap { parseErrors =>
+      tryOfferSchema.disjunction.leftMap { parseErrors =>
         parseErrors.size mustEqual 1
         parseErrors.head must beAnInstanceOf[ValidationError]
       }
 
-        tryDataSchema.isSuccess must beFalse
+      tryOfferSchema.isSuccess must beFalse
     }
   }
 }

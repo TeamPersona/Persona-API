@@ -30,14 +30,14 @@ class OfferServiceImplSpec extends PlaySpecification with Mockito {
       val offerDao = mock[OfferDAO]
       offerDao.list(any[ExecutionContext]) returns Future.successful(Seq(offer))
 
-      val dataSchema = mock[OfferSchema]
-      dataSchema.creationDay returns new DateTime(1437090963326L)
-      dataSchema.description returns "desc"
-      dataSchema.expirationTime returns new DateTime(1437090963326L)
-      dataSchema.currentParticipants returns 2
-      dataSchema.maxParticipants returns 10
-      dataSchema.value returns 3.50
-      dataSchema.validate(any[Offer]) returns true
+      val offerSchema = mock[OfferSchema]
+      offerSchema.creationDay returns new DateTime(1437090963326L)
+      offerSchema.description returns "desc"
+      offerSchema.expirationTime returns new DateTime(1437090963326L)
+      offerSchema.currentParticipants returns 2
+      offerSchema.maxParticipants returns 10
+      offerSchema.value returns 3.50
+      offerSchema.validate(any[Offer]) returns true
 
       val offerService = new OfferServiceImpl(offerDao)
 

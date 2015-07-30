@@ -23,4 +23,6 @@ class JsonOfferWriter {
 
   def toJson(offer: Offer): JsValue = Json.toJson(offer)
 
+  def toJson(offers: Seq[Offer]): JsValue = Json.toJson(offers)
+
 }

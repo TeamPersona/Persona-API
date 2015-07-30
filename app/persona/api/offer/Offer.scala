@@ -4,7 +4,6 @@ import java.util.UUID
 
 import org.joda.time.DateTime
 import persona.api.authentication.User
-import persona.api.offer.offerImpl.InvalidOfferException
 import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
@@ -18,9 +17,7 @@ case class Offer (val id: UUID,          // This is a timeUUID that has the exac
              value: Double,
              criteria: Map[String,String]) {
 
-  if(criteria.isEmpty) {
-    throw new InvalidOfferException("There are no criteria for the offer")
-  }
+  require(criteria != null && criteria.nonEmpty)
 
   def participate(user: User): Future[Option[Unit]] = {
     Future {

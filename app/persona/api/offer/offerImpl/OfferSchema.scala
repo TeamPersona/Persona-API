@@ -12,15 +12,11 @@ class OfferSchema private (val creationDay: DateTime,
                             val value: Double,
                             criteriaDescriptors: Map[String, OfferCriterionDescriptor]) {
 
-  if(description.isEmpty) {
-    throw new InvalidOfferSchema("Offer schema has no description")
-  }
+  require(criteriaDescriptors != null && criteriaDescriptors.nonEmpty)
+  require(description != null && !description.isEmpty)
 
   //TODO: also check the DateTime and Int/Double fields
 
-  if(criteriaDescriptors.isEmpty) {
-    throw new InvalidOfferSchema("Offer schema has no criteria")
-  }
 
   def this(creationDay: DateTime, description: String, expirationTime: DateTime, currentParticipants: Int, maxParticipants: Int, value: Double, criteriaDescriptors: Seq[OfferCriterionDescriptor]) = {
     this(creationDay, description, expirationTime, currentParticipants, maxParticipants, value, criteriaDescriptors.map(criterion => criterion.criterionCategory -> criterion).toMap)

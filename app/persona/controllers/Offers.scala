@@ -21,39 +21,19 @@ class Offers @Inject() (offerService: OfferService,
   def list = Action.async {
     val offers = offerService.list
       offers map {offer =>
-        val jsonOffers = offer.map(jsonOfferWriter.toJson)
-        val serializedJson = Json.toJson(jsonOffers)
-
-        Ok(serializedJson)
+        val json = jsonOfferWriter.toJson(offer)
+        Ok(json)
       }
   }
-
-//
-//def get(id: UUID) = Action.async {
-//
-//  offerService.get(id).map { optionOffer =>
-//    optionOffer map { offer =>
-//      val jsonOffers = optionOffer.map(jsonOfferWriter.toJson)
-//      val serializedJson = Json.toJson(jsonOffers)
-//
-//      Ok(serializedJson)
-//    } getOrElse {
-//      InternalServerError
-//    }
-//  }
-//}
-
 
   def get(id: UUID) = Action.async {
 
     offerService.get(id).map { optionOffer =>
       optionOffer map { offer =>
-        val jsonOffers = optionOffer.map(jsonOfferWriter.toJson)
-        val serializedJson = Json.toJson(jsonOffers)
-
-        Ok(serializedJson)
+        val json = jsonOfferWriter.toJson(offer)
+        Ok(json)
       } getOrElse {
-        InternalServerError
+        Ok("Could not find the offer: " + id)
       }
     }
   }

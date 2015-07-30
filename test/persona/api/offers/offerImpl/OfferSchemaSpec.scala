@@ -12,7 +12,7 @@ import persona.api.offer.offerImpl._
 class OfferSchemaSpec extends Specification with Mockito{
   "OfferSchema" should {
     "throw exception if there are no criteria" in {
-      new OfferSchema(new DateTime(1437090963326L), "desc", new DateTime(1437090963326L), 2, 10, 3.50, Seq()) must throwAn[InvalidOfferSchema]
+      new OfferSchema(new DateTime(1437090963326L), "desc", new DateTime(1437090963326L), 2, 10, 3.50, Seq()) must throwAn[IllegalArgumentException]
     }
   }
 
