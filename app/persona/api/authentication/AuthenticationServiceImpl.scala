@@ -8,8 +8,8 @@ import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
 import persona.model.authentication.User
 import persona.model.dao.authentication.UserDAO
+import play.api.libs.concurrent.Execution.Implicits._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AuthenticationServiceImpl @Inject()(userDAO: UserDAO) extends AuthenticationService {

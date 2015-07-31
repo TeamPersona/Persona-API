@@ -17,9 +17,8 @@ import persona.api.authentication.{AuthenticationService, AuthenticationServiceI
 import persona.model.authentication.User
 import persona.model.dao.authentication.{InMemoryPasswordDAO, InMemoryUserDAOImpl, UserDAO}
 import play.api.Configuration
+import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.ws.WSClient
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class SilhouetteModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
@@ -70,15 +69,15 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
 
   @Provides
   def provideAuthInfoRepository(
-                               passwordDAO: DelegableAuthInfoDAO[PasswordInfo]
+                                 passwordDAO: DelegableAuthInfoDAO[PasswordInfo]
                                  ): AuthInfoRepository = {
     new DelegableAuthInfoRepository(passwordDAO)
   }
 
   @Provides
   def provideCredentialsProvider(
-                                authInfoRepository: AuthInfoRepository,
-                                passwordHasher: PasswordHasher
+                                  authInfoRepository: AuthInfoRepository,
+                                  passwordHasher: PasswordHasher
                                   ): CredentialsProvider = {
     new CredentialsProvider(authInfoRepository, passwordHasher, Seq(passwordHasher))
   }
