@@ -7,6 +7,6 @@ GET     /api/authorize                 persona.controllers.Authentication.author
 
 # Offers
 GET     /api/offer                     persona.controllers.Offers.list
-GET     /api/offer/:id                 persona.controllers.Offers.get(id: Long)
-POST    /api/offer/:id/participate     persona.controllers.Offers.participate(id: Long)
+GET     /api/offer/:id                 persona.controllers.Offers.get(id: java.util.UUID)
+POST    /api/offer/:id/participate     persona.controllers.Offers.participate(id: java.util.UUID)
 

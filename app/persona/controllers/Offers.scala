@@ -3,38 +3,45 @@ package persona.controllers
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import persona.api.authentication.User
 import persona.api.offer.OfferService
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import play.api.mvc._
+import persona.api.offer.offerImpl._
 
 import scala.concurrent.Future
 
 @Singleton
-class Offers @Inject() (offerService: OfferService) extends Controller {
+class Offers @Inject() (offerService: OfferService,
+                         jsonOfferWriter: JsonOfferWriter) extends Controller {
 
   def list = Action.async {
-    offerService.list map { option =>
-      option map { offers =>
-        Ok(JsString("Listing offers!"))
+    val offers = offerService.list
+      offers map {offer =>
+        val json = jsonOfferWriter.toJson(offer)
+        Ok(json)
+      }
+  }
+
+  def get(id: UUID) = Action.async {
+
+    offerService.get(id).map { optionOffer =>
+      optionOffer map { offer =>
+        val json = jsonOfferWriter.toJson(offer)
+        Ok(json)
       } getOrElse {
-        InternalServerError
+        Ok("Could not find the offer: " + id)
       }
     }
   }
 
-  def get(id: Long) = Action.async {
-    offerService.get(id) map { option =>
-      option map { offer =>
-        Ok(JsString("Listing offer " + offer.id))
-      } getOrElse {
-        InternalServerError
-      }
-    }
-  }
 
-  def participate(id: Long) = Action.async {
+
+
+  def participate(id: UUID) = Action.async {
     // First, retrieve the offer
     val retrieveOffer = offerService.get(id)
 
