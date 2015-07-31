@@ -6,7 +6,7 @@ import org.junit.runner.RunWith
 import org.specs2.mock._
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
-import persona.api.authentication.User
+import persona.model.authentication.User
 import persona.util.ValidationError
 import play.api.libs.json.Json
 
@@ -27,7 +27,7 @@ class JsonDataItemParserSpec extends Specification with Mockito {
         """.stripMargin
 
       val mockUser = mock[User]
-      mockUser.id returns UUID.fromString("fb93dda6-7e1f-439c-a249-0d4c22252858")
+      mockUser.userId returns UUID.fromString("fb93dda6-7e1f-439c-a249-0d4c22252858")
 
       val maybeDataItem = new JsonDataItemParser().parse(mockUser, Json.parse(json))
       maybeDataItem.isSuccess must beTrue
@@ -46,7 +46,7 @@ class JsonDataItemParserSpec extends Specification with Mockito {
         """.stripMargin
 
       val mockUser = mock[User]
-      mockUser.id returns UUID.fromString("fb93dda6-7e1f-439c-a249-0d4c22252858")
+      mockUser.userId returns UUID.fromString("fb93dda6-7e1f-439c-a249-0d4c22252858")
 
       val maybeDataItem = new JsonDataItemParser().parse(mockUser, Json.parse(json))
 
