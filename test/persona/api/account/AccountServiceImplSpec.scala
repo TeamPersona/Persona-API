@@ -4,7 +4,7 @@ import org.junit.runner.RunWith
 import org.specs2.mock._
 import org.specs2.runner.JUnitRunner
 import persona.api.account.personal._
-import persona.api.authentication.User
+import persona.model.authentication.User
 import play.api.test.PlaySpecification
 
 import scala.concurrent.{ExecutionContext, Future}
