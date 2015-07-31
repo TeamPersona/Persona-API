@@ -7,7 +7,7 @@ import org.specs2.mock.Mockito
 import org.specs2.runner._
 import persona.api.account.AccountService
 import persona.api.account.personal.{DataItem, DataItemValidationError, JsonDataItemParser, JsonDataItemWriter}
-import persona.api.authentication.User
+import persona.model.authentication.User
 import persona.util.ParseError
 import play.api.http.MimeTypes
 import play.api.libs.iteratee.Input

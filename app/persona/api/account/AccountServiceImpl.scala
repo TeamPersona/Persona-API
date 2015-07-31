@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import com.websudos.phantom.dsl.ResultSet
 import persona.api.account.personal._
-import persona.api.authentication.User
+import persona.model.authentication.User
 
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz._

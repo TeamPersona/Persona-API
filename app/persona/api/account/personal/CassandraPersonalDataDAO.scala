@@ -6,18 +6,12 @@ import com.datastax.driver.core.Row
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl.{context => _, _}
 import com.websudos.phantom.keys.PartitionKey
-import persona.api.authentication.User
 import persona.db.PersonaCassandraConnector
+import persona.model.authentication.User
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class PersonalDataTable extends CassandraTable[PersonalDataTable, DataItem] {
-
-  object user_id extends UUIDColumn(this) with PartitionKey[UUID]
-  object creation_time extends DateTimeColumn(this) with ClusteringOrder[DateTime] with Descending
-  object category extends StringColumn(this)
-  object subcategory extends StringColumn(this)
-  object data extends MapColumn[PersonalDataTable, DataItem, String, String](this)
 
   override def tableName = "personal"
 
@@ -31,14 +25,25 @@ class PersonalDataTable extends CassandraTable[PersonalDataTable, DataItem] {
     )
   }
 
+  object user_id extends UUIDColumn(this) with PartitionKey[UUID]
+
+  object creation_time extends DateTimeColumn(this) with ClusteringOrder[DateTime] with Descending
+
+  object category extends StringColumn(this)
+
+  object subcategory extends StringColumn(this)
+
+  object data extends MapColumn[PersonalDataTable, DataItem, String, String](this)
+
 }
 
 class CassandraPersonalDataDAO extends PersonalDataTable with PersonalDataDAO with PersonaCassandraConnector {
 
+  // FIXME: UserID changed to UUID. Not sure if you now need additional parsing
   def listInformation(user: User)(implicit ec: ExecutionContext): Future[Seq[DataItem]] = {
-    select.where(_.user_id eqs user.id)
-          .fetch
-          .map(_.toSeq)
+    select.where(_.user_id eqs user.userId)
+      .fetch
+      .map(_.toSeq)
   }
 
   def saveInformation(dataItem: DataItem)(implicit ec: ExecutionContext): Future[ResultSet] = {

@@ -1,7 +1,7 @@
 package persona.api.account.personal
 
 import org.joda.time.DateTime
-import persona.api.authentication.User
+import persona.model.authentication.User
 import persona.util.{ParseError, ValidationError}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -31,7 +31,7 @@ class JsonDataItemParser {
 
     rawDataValidation.map { rawDataItem =>
       DataItem(
-        user.id,
+        user.userId,
         DateTime.now(),
         rawDataItem.category,
         rawDataItem.subcategory,
