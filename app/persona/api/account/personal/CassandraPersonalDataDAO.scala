@@ -46,4 +46,13 @@ class CassandraPersonalDataDAO extends PersonalDataTable with PersonalDataDAO wi
       .map(_.toSeq)
   }
 
+  def saveInformation(dataItem: DataItem)(implicit ec: ExecutionContext): Future[ResultSet] = {
+    insert.value(_.user_id, dataItem.userID)
+          .value(_.creation_time, dataItem.creationTime)
+          .value(_.category, dataItem.category)
+          .value(_.subcategory, dataItem.subcategory)
+          .value(_.data, dataItem.data)
+          .future()
+  }
+
 }
