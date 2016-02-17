@@ -1,4 +1,4 @@
-package com.persona.db
+package com.persona.util.db
 
 import com.websudos.phantom.connectors.{ContactPoint, KeySpace}
 

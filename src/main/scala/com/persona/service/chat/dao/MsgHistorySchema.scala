@@ -1,8 +1,6 @@
 package com.persona.service.chat.dao
 
 import java.util.UUID
-
-import com.persona.util.db.DatabaseConfig
 import slick.driver.PostgresDriver.api._
 
 case class MsgHistory(

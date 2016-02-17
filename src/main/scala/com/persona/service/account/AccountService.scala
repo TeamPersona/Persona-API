@@ -1,5 +1,5 @@
 package com.persona.service.account
 
-class AccountService {
+class AccountService(accountDAO: AccountDAO) {
 
 }

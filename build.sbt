@@ -20,6 +20,7 @@ libraryDependencies ++= {
   val scalazV = "7.1.3"
   val slickV = "3.1.1"
   val postgresV = "9.4.1207"
+  val hikariV = "2.4.3"
 
   Seq(
     "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
@@ -28,6 +29,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaHttpV,
     "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpV,
     "com.typesafe.slick" %% "slick" % slickV,
+    "com.typesafe.slick" %% "slick-hikaricp" % slickV,
     "org.postgresql" % "postgresql" % postgresV,
     "org.scalatest" %% "scalatest" % scalaTestV % "test",
     "org.scalamock" %% "scalamock-scalatest-support" % scalaMockV % "test",

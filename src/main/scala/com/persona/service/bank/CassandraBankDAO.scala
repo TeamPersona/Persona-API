@@ -3,8 +3,8 @@ package com.persona.service.bank
 import java.util.UUID
 
 import com.datastax.driver.core.Row
-import com.persona.db.PersonaCassandraConnector
 import com.persona.service.account.Account
+import com.persona.util.db.PersonaCassandraConnector
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl.{context => _, _}
 import com.websudos.phantom.keys.PartitionKey
