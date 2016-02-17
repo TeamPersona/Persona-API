@@ -2,10 +2,11 @@ package com.persona.http.account
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.Directives._
+import com.persona.service.account.AccountService
 
 import spray.json._
 
-class AccountApi extends SprayJsonSupport {
+class AccountApi(accountService: AccountService) extends SprayJsonSupport {
 
   val route = {
     pathPrefix("account") {

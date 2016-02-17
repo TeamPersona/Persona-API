@@ -8,20 +8,18 @@ import com.persona.http.account.AccountApi
 import com.persona.http.authentication.AuthenticationApi
 import com.persona.http.authorization.AuthorizationApi
 import com.persona.http.bank.BankApi
-import com.persona.http.offer.OfferApi
-import akka.stream.Materializer
-import com.persona.http.authentication.AuthenticationApi
-import com.persona.http.authorization.AuthorizationApi
 import com.persona.http.chat.ChatApi
-
+import com.persona.http.offer.OfferApi
+import com.persona.service.account.{AccountService, SlickAccountDAO}
 import com.persona.service.authentication.PersonaAuthService
 import com.persona.service.authentication.facebook.FacebookAuthService
 import com.persona.service.authentication.google.GoogleAuthService
 import com.persona.service.authorization.AuthorizationService
-import com.persona.service.bank.{DataItemValidator, CassandraBankDAO, JsonDataSchemaLoader, BankService}
-import com.persona.service.offer.{OfferService, CassandraOfferDAO}
+import com.persona.service.bank.{BankService, CassandraBankDAO, DataItemValidator, JsonDataSchemaLoader}
 import com.persona.service.chat.ChatService
+import com.persona.service.offer.{CassandraOfferDAO, OfferService}
 import com.typesafe.config.Config
+import slick.jdbc.JdbcBackend._
 
 import scala.concurrent.ExecutionContext
 
@@ -32,10 +30,14 @@ class Bootstrap
   private[this] val personaConfig = config.getConfig("persona")
   private[this] val googleClientId = personaConfig.getString("google_client_id")
 
+  private[this] val db = Database.forConfig("db", personaConfig)
+
   private[this] val authorizationService = new AuthorizationService
   private[this] val authorizationApi = new AuthorizationApi(authorizationService)
 
-  private[this] val accountApi = new AccountApi
+  private[this] val accountDAO = new SlickAccountDAO(db)
+  private[this] val accountService = new AccountService(accountDAO)
+  private[this] val accountApi = new AccountApi(accountService)
 
   private[this] val personaAuthService = new PersonaAuthService
   private[this] val facebookAuthService = new FacebookAuthService
@@ -56,8 +58,8 @@ class Bootstrap
   private[this] val offerService = OfferService(offerDAO)
   private[this] val offerApi = new OfferApi(offerService)
 
-  private[this] val chatServce = new ChatService
-  private[this] val chatApi = new ChatApi(chatServce)
+  private[this] val chatService = new ChatService
+  private[this] val chatApi = new ChatApi(chatService)
 
   val routes = {
     accountApi.route ~

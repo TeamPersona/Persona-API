@@ -22,3 +22,12 @@ Setting Up
 5. Select "Import from existing sources" and choose "SBT"
     * I'd recommend selecting "Use auto-import" as well as download source and documentation
 
+### Postgres
+1. brew install postgresql
+2. postgres -D /usr/local/var/postgres
+3. createdb persona
+
+### Cassandra
+1. scripts/startCassandra.sh
+    * This will download Cassandra to ~/Downloads
+2. scripts/setupCassandra.sh

@@ -28,6 +28,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaHttpV,
     "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpV,
     "com.typesafe.slick" %% "slick" % slickV,
+    "com.typesafe.slick" %% "slick-hikaricp" % slickV,
     "org.postgresql" % "postgresql" % postgresV,
     "org.scalatest" %% "scalatest" % scalaTestV % "test",
     "org.scalamock" %% "scalamock-scalatest-support" % scalaMockV % "test",
