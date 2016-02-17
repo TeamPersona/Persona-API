@@ -8,7 +8,7 @@ AND durable_writes = true;
 USE persona;
 
 CREATE TABLE IF NOT EXISTS bank(
-  user_id uuid,
+  user_id int,
   creation_time timestamp,
   category text,
   subcategory text,

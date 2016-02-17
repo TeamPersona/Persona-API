@@ -1,7 +1,5 @@
 package com.persona.http.bank
 
-import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
@@ -24,8 +22,7 @@ class BankApi(bankService: BankService)(implicit ec: ExecutionContext)
         post {
           entity(as[RawDataItem]) { rawDataItem =>
             val dataItem = rawDataItem.process()
-            val testId = UUID.fromString("da73919b-3650-4cc7-be06-b74ef16c4b3a")
-            val testAccount = new Account(testId)
+            val testAccount = new Account(0, "john", "smith", "johnsmith@example.com", "123-456-7890")
 
             onComplete(bankService.saveInformation(testAccount, dataItem)) {
               case Success(result) =>
@@ -40,8 +37,7 @@ class BankApi(bankService: BankService)(implicit ec: ExecutionContext)
           }
         } ~
         get {
-          val testId = UUID.fromString("da73919b-3650-4cc7-be06-b74ef16c4b3a")
-          val testAccount = new Account(testId)
+          val testAccount = new Account(0, "john", "smith", "johnsmith@example.com", "123-456-7890")
 
           onComplete(bankService.listInformation(testAccount)) {
             case Success(dataItems) => complete(dataItems.toJson)

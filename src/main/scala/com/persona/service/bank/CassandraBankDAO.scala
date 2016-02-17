@@ -1,7 +1,5 @@
 package com.persona.service.bank
 
-import java.util.UUID
-
 import com.datastax.driver.core.Row
 import com.persona.service.account.Account
 import com.persona.util.db.PersonaCassandraConnector
@@ -13,7 +11,17 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class BankTable extends CassandraTable[BankTable, DataItem] {
 
-  override def tableName = "bank"
+  override def tableName: String = "bank"
+
+  object user_id extends IntColumn(this) with PartitionKey[Int]
+
+  object creation_time extends DateTimeColumn(this) with ClusteringOrder[DateTime] with Descending
+
+  object category extends StringColumn(this)
+
+  object subcategory extends StringColumn(this)
+
+  object data extends MapColumn[BankTable, DataItem, String, String](this)
 
   def fromRow(row: Row): DataItem = {
     DataItem(
@@ -23,16 +31,6 @@ class BankTable extends CassandraTable[BankTable, DataItem] {
       data(row)
     )
   }
-
-  object user_id extends UUIDColumn(this) with PartitionKey[UUID]
-
-  object creation_time extends DateTimeColumn(this) with ClusteringOrder[DateTime] with Descending
-
-  object category extends StringColumn(this)
-
-  object subcategory extends StringColumn(this)
-
-  object data extends MapColumn[BankTable, DataItem, String, String](this)
 
 }
 
