@@ -1,49 +1,45 @@
-name := """Persona-API"""
-
-version := "1.0-SNAPSHOT"
-
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
-
+name         := """Persona-API"""
+organization := "Project Persona"
+version      := "0.1-SNAPSHOT"
 scalaVersion := "2.11.7"
 
-val phantomVersion = "1.10.0"
-val scalazVersion = "7.1.3"
-
-libraryDependencies ++= Seq(
-  jdbc,
-  cache,
-  ws,
-  specs2 % Test,
-  "org.scalaz" %% "scalaz-core" % scalazVersion,
-  "com.websudos" %% "phantom-dsl" % phantomVersion,
-  "com.websudos" %% "phantom-testkit" % phantomVersion,
-  "com.mohiva" %% "play-silhouette" % "3.0.0",
-  "com.mohiva" %% "play-silhouette-testkit" % "3.0.0" % "test",
-  "net.codingwell" %% "scala-guice" % "4.0.0",
-  "net.ceedubs" %% "ficus" % "1.1.2"
-)
+scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 resolvers ++= Seq(
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
-  "Typesafe repository snapshots" at "http://repo.typesafe.com/typesafe/snapshots/",
-  "Typesafe repository releases" at "http://repo.typesafe.com/typesafe/releases/",
-  "Sonatype repo" at "https://oss.sonatype.org/content/groups/scala-tools/",
-  "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases",
-  "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-  "Sonatype staging" at "http://oss.sonatype.org/content/repositories/staging",
-  "Java.net Maven2 Repository" at "http://download.java.net/maven/2/",
-  "Twitter Repository" at "http://maven.twttr.com",
-  "Websudos releases" at "https://dl.bintray.com/websudos/oss-releases/",
-  "Atlassian Releases" at "https://maven.atlassian.com/public/",
-  Classpaths.sbtPluginReleases
+  "Websudos releases" at "https://dl.bintray.com/websudos/oss-releases/"
 )
+
+libraryDependencies ++= {
+  val akkaHttpV = "2.0.1"
+  val scalaTestV  = "3.0.0-M15"
+  val scalaMockV = "3.2.2"
+  val nimbusOAuth = "5.1"
+  val nscalaTimeV = "2.6.0"
+  val phantomV = "1.11.0"
+  val scalazV = "7.1.3"
+  val slickV = "3.1.1"
+  val postgresV = "9.4.1207"
+
+  Seq(
+    "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
+    "com.typesafe.akka" %% "akka-http-core-experimental" % akkaHttpV,
+    "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV,
+    "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaHttpV,
+    "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpV,
+    "com.typesafe.slick" %% "slick" % slickV,
+    "org.postgresql" % "postgresql" % postgresV,
+    "org.scalatest" %% "scalatest" % scalaTestV % "test",
+    "org.scalamock" %% "scalamock-scalatest-support" % scalaMockV % "test",
+    "com.nimbusds" % "oauth2-oidc-sdk" % nimbusOAuth,
+    "com.github.nscala-time" %% "nscala-time" % nscalaTimeV,
+    "org.scalaz" %% "scalaz-core" % scalazV,
+    "com.websudos" %% "phantom-dsl" % phantomV
+  )
+}
 
 // Coveralls settings
 ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 70
 ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := false
 ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := true
-ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := "<empty>;controllers\\..*Reverse.*;router\\..*Routes.*;"
 
-// Play provides two styles of routers, one expects its actions to be injected, the
-// other, legacy style, accesses its actions statically.
-routesGenerator := InjectedRoutesGenerator

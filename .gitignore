@@ -10,13 +10,21 @@
 # Mac
 .DS_Store
 
-# Play
-build/
-data/
-dist/
-logs/
-project/boot
-project/project
-project/plugins/target
-RUNNING_PID
+# jvm specific
+*.class
+*.log
+
+# sbt specific
+.cache
+.history
+.lib/
+dist/*
 target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
