@@ -1,7 +1,17 @@
-CREATE KEYSPACE IF NOT EXISTS keyspace1 WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'}  AND durable_writes = true;
+CREATE KEYSPACE IF NOT EXISTS persona WITH REPLICATION =
+{
+  'class': 'SimpleStrategy',
+  'replication_factor': '1'
+}
+AND durable_writes = true;
 
-CREATE TABLE IF NOT EXISTS keyspace1.users (
-firstname varchar, 
-lastname varchar, 
-age int, 
-PRIMARY KEY (firstname, lastname));
+USE persona;
+
+CREATE TABLE IF NOT EXISTS bank(
+  user_id uuid,
+  creation_time timestamp,
+  category text,
+  subcategory text,
+  data map<text, text>,
+  PRIMARY KEY(user_id, creation_time))
+WITH CLUSTERING ORDER BY(creation_time DESC);

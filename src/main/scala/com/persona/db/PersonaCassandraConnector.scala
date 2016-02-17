@@ -1,10 +1,17 @@
 package com.persona.db
 
-import com.websudos.phantom.connectors.KeySpace
-import com.websudos.phantom.dsl.SimpleCassandraConnector
+import com.websudos.phantom.connectors.{ContactPoint, KeySpace}
 
-trait PersonaCassandraConnector extends SimpleCassandraConnector {
+trait KeySpaceDefinition {
 
-  implicit def keySpace: KeySpace = KeySpace("persona")
+  implicit val keySpace = KeySpace("persona")
 
 }
+
+object Defaults extends KeySpaceDefinition {
+
+  val connector = ContactPoint.local.keySpace(keySpace.name)
+
+}
+
+trait PersonaCassandraConnector extends Defaults.connector.Connector

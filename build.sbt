@@ -11,12 +11,12 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= {
-  val akkaHttpV = "2.0.1"
+  val akkaHttpV = "2.0.3"
   val scalaTestV  = "3.0.0-M15"
   val scalaMockV = "3.2.2"
   val nimbusOAuth = "5.1"
   val nscalaTimeV = "2.6.0"
-  val phantomV = "1.11.0"
+  val phantomV = "1.22.0"
   val scalazV = "7.1.3"
   val slickV = "3.1.1"
   val postgresV = "9.4.1207"
