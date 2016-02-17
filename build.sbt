@@ -20,7 +20,6 @@ libraryDependencies ++= {
   val scalazV = "7.1.3"
   val slickV = "3.1.1"
   val postgresV = "9.4.1207"
-  val hikariV = "2.4.3"
 
   Seq(
     "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
