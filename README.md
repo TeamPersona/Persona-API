@@ -9,10 +9,12 @@ FYDP - Personal Information Banking
 
 Setting Up
 ---------
+### Java
+1. brew tap caskroom/cask
+2. brew install Caskroom/cask/java
 
-### Dependencies
-1. Java 8
-2. SBT (install using: brew install sbt)
+### SBT
+1. brew install sbt
 
 ### IntelliJ
 1. Open up IntelliJ.  
@@ -26,6 +28,7 @@ Setting Up
 1. brew install postgresql
 2. postgres -D /usr/local/var/postgres
 3. createdb persona
+4. psql -h localhost -d persona -a -f scripts/postgresSchemas.sql
 
 ### Cassandra
 1. scripts/startCassandra.sh
