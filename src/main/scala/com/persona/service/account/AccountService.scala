@@ -4,6 +4,7 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import com.persona.util.actor.ActorWrapper
+import org.mindrot.jbcrypt.BCrypt
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -18,7 +19,7 @@ object AccountServiceActor {
 
 }
 
-class AccountServiceActor(accountDAO: AccountDAO) extends Actor {
+class AccountServiceActor(accountDAO: AccountDAO, passwordLogRounds: Int) extends Actor {
 
   private[this] implicit val executionContext = context.dispatcher
 
@@ -31,8 +32,10 @@ class AccountServiceActor(accountDAO: AccountDAO) extends Actor {
           if(exists) {
             actor ! (new AccountAlreadyExistsError).failureNel
           } else {
-            // TODO - Hash password
-            accountDAO.create(accountDescriptor, password, "salt").onComplete {
+            val salt = BCrypt.gensalt(passwordLogRounds)
+            val hashedPassword = BCrypt.hashpw(password, salt)
+
+            accountDAO.create(accountDescriptor, hashedPassword).onComplete {
               case Success(result) => actor ! result.successNel
               case Failure(e) => actor ! Status.Failure(e)
             }
@@ -48,8 +51,12 @@ object AccountService {
 
   private val createTimeout = Timeout(60.seconds)
 
-  def apply(accountDAO: AccountDAO)(implicit actorSystem: ActorSystem): AccountService = {
-    val actor = actorSystem.actorOf(Props(new AccountServiceActor(accountDAO)))
+  def apply(accountDAO: AccountDAO, passwordLogRounds: Int)(implicit actorSystem: ActorSystem): AccountService = {
+    val actor = actorSystem.actorOf(
+      Props(
+        new AccountServiceActor(accountDAO, passwordLogRounds)
+      )
+    )
 
     new AccountService(actor)
   }

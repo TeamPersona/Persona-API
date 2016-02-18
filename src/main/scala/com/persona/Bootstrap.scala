@@ -36,8 +36,9 @@ class Bootstrap
   private[this] val authorizationApi = new AuthorizationApi(authorizationService)
 
   private[this] val accountValidator = new AccountValidator
+  private[this] val passwordLogRounds = personaConfig.getInt("passwordLogRounds")
   private[this] val accountDAO = new SlickAccountDAO(db)
-  private[this] val accountService = AccountService(accountDAO)
+  private[this] val accountService = AccountService(accountDAO, passwordLogRounds)
   private[this] val accountApi = new AccountApi(accountService, accountValidator)
 
   private[this] val personaAuthService = new PersonaAuthService

@@ -8,6 +8,6 @@ trait AccountDAO {
 
   def exists(accountDescriptor: AccountDescriptor)(implicit ec: ExecutionContext): Future[Boolean]
 
-  def create(accountDescriptor: AccountDescriptor, password: String, salt: String)(implicit ec: ExecutionContext): Future[Unit]
+  def create(accountDescriptor: AccountDescriptor, hashedPassword: String)(implicit ec: ExecutionContext): Future[Unit]
 
 }
