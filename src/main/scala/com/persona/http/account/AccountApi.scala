@@ -25,24 +25,22 @@ class AccountApi
     pathPrefix("account") {
       pathEndOrSingleSlash {
         post {
-          formFields('given_name.as[String],
-                     'family_name.as[String],
-                     'email.as[String],
-                     'phone_number.as[String]).as(AccountDescriptor) { accountDescriptor =>
+          formFields('given_name, 'family_name, 'email, 'phone_number.as[String]).as(AccountDescriptor) { accountDescriptor =>
             accountValidator.validate(accountDescriptor).fold({ errors =>
               complete(StatusCodes.BadRequest, errorJson(errors))
             }, { _ =>
-              // TODO - Get password
-              onComplete(accountService.create(accountDescriptor, "password")) {
-                case Success(validationResult) =>
-                  if(validationResult.isSuccess) {
-                    complete("""{ "code": "abcdefghikl" }""".parseJson)
-                  } else {
-                    complete(StatusCodes.Conflict)
-                  }
+              formFields('password) { password =>
+                onComplete(accountService.create(accountDescriptor, password)) {
+                  case Success(validationResult) =>
+                    if(validationResult.isSuccess) {
+                      complete("""{ "code": "abcdefghikl" }""".parseJson)
+                    } else {
+                      complete(StatusCodes.Conflict)
+                    }
 
-                case Failure(e) =>
-                  complete(StatusCodes.InternalServerError)
+                  case Failure(e) =>
+                    complete(StatusCodes.InternalServerError)
+                }
               }
             })
           }
