@@ -14,7 +14,7 @@ import scalaz.ValidationNel
 
 object AccountServiceActor {
 
-  case class Create(accountDescriptor: AccountDescriptor)
+  case class Create(accountDescriptor: AccountDescriptor, password: String)
 
 }
 
@@ -23,7 +23,7 @@ class AccountServiceActor(accountDAO: AccountDAO) extends Actor {
   private[this] implicit val executionContext = context.dispatcher
 
   def receive: Receive = {
-    case AccountServiceActor.Create(accountDescriptor) =>
+    case AccountServiceActor.Create(accountDescriptor, password) =>
       val actor = sender
 
       accountDAO.exists(accountDescriptor).onComplete {
@@ -31,7 +31,8 @@ class AccountServiceActor(accountDAO: AccountDAO) extends Actor {
           if(exists) {
             actor ! (new AccountAlreadyExistsError).failureNel
           } else {
-            accountDAO.create(accountDescriptor).onComplete {
+            // TODO - Hash password
+            accountDAO.create(accountDescriptor, password, "salt").onComplete {
               case Success(result) => actor ! result.successNel
               case Failure(e) => actor ! Status.Failure(e)
             }
@@ -57,10 +58,10 @@ object AccountService {
 
 class AccountService private(actor: ActorRef) extends ActorWrapper(actor) {
 
-  def create(accountDescriptor: AccountDescriptor)
+  def create(accountDescriptor: AccountDescriptor, password: String)
             (implicit ec: ExecutionContext): Future[ValidationNel[AccountValidationError, Unit]] = {
     implicit val timeout = AccountService.createTimeout
-    val futureResult = actor ? AccountServiceActor.Create(accountDescriptor)
+    val futureResult = actor ? AccountServiceActor.Create(accountDescriptor, password)
 
     futureResult.map { result =>
       result.asInstanceOf[ValidationNel[AccountValidationError, Unit]]

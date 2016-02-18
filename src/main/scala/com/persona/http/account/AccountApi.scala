@@ -32,7 +32,8 @@ class AccountApi
             accountValidator.validate(accountDescriptor).fold({ errors =>
               complete(StatusCodes.BadRequest, errorJson(errors))
             }, { _ =>
-              onComplete(accountService.create(accountDescriptor)) {
+              // TODO - Get password
+              onComplete(accountService.create(accountDescriptor, "password")) {
                 case Success(validationResult) =>
                   if(validationResult.isSuccess) {
                     complete("""{ "code": "abcdefghikl" }""".parseJson)
