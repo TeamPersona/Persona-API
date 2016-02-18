@@ -16,23 +16,24 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-private object GoogleAuthServiceActor {
+private object GoogleTokenValidationServiceActor {
 
-  case class Authenticate(idToken: JWT)
+  val DiscoveryDocumentUrl = "https://accounts.google.com/.well-known/openid-configuration"
+  val Issuers = List("https://accounts.google.com", "accounts.google.com")
+
+  case class Validate(idToken: JWT)
 
 }
 
-private class GoogleAuthServiceActor(clientID: String, http: HttpExt, discoveryUrl: String)
-  extends Actor
-    with Stash {
+private class GoogleTokenValidationServiceActor(clientID: String, http: HttpExt) extends Actor with Stash {
 
-  context.actorOf(Props(new DiscoveryDocumentJwkRetriever(self, http, discoveryUrl)))
+  context.actorOf(Props(new DiscoveryDocumentJwkRetriever(self, http, GoogleTokenValidationServiceActor.DiscoveryDocumentUrl)))
 
   private[this] implicit val executionContext = context.dispatcher
   private[this] var validators = List.empty[IDTokenValidator]
 
   def receive: Receive = {
-    case GoogleAuthServiceActor.Authenticate(idToken) =>
+    case GoogleTokenValidationServiceActor.Validate(idToken) =>
       stash()
 
     case jwkSet: JWKSet =>
@@ -42,9 +43,9 @@ private class GoogleAuthServiceActor(clientID: String, http: HttpExt, discoveryU
   }
 
   def initializedReceive: Receive = {
-    case GoogleAuthServiceActor.Authenticate(idToken) =>
+    case GoogleTokenValidationServiceActor.Validate(idToken) =>
       val authenticated = validators.exists { validator =>
-        Try(validator.validate(idToken, null)).isSuccess
+        Try(validator.validate(idToken, None.orNull)).isSuccess
       }
 
       sender ! authenticated
@@ -54,7 +55,7 @@ private class GoogleAuthServiceActor(clientID: String, http: HttpExt, discoveryU
   }
 
   private[this] def update(jwkSet: JWKSet) = {
-    validators = GoogleAuthService.Issuers.map { issuer =>
+    validators = GoogleTokenValidationServiceActor.Issuers.map { issuer =>
       new IDTokenValidator(
         new Issuer(issuer),
         new ClientID(clientID),
@@ -66,30 +67,27 @@ private class GoogleAuthServiceActor(clientID: String, http: HttpExt, discoveryU
 
 }
 
-object GoogleAuthService {
+object GoogleTokenValidationService {
 
-  private val AuthenticateTimeout = Timeout(60.seconds)
+  private val ValidateTimeout = Timeout(60.seconds)
 
-  val DiscoveryDocumentUrl = "https://accounts.google.com/.well-known/openid-configuration"
-  val Issuers = List("https://accounts.google.com", "accounts.google.com")
-
-  def apply(clientID: String, http: HttpExt)(implicit actorSystem: ActorSystem): GoogleAuthService = {
+  def apply(clientID: String, http: HttpExt)(implicit actorSystem: ActorSystem): GoogleTokenValidationService = {
     val actor = actorSystem.actorOf(
       Props(
-        new GoogleAuthServiceActor(clientID, http, GoogleAuthService.DiscoveryDocumentUrl)
+        new GoogleTokenValidationServiceActor(clientID, http)
       )
     )
 
-    new GoogleAuthService(actor)
+    new GoogleTokenValidationService(actor)
   }
 
 }
 
-class GoogleAuthService private(actor: ActorRef) extends ActorWrapper(actor) {
+class GoogleTokenValidationService private(actor: ActorRef) extends ActorWrapper(actor) {
 
-  def authenticate(idToken: JWT)(implicit executionContext: ExecutionContext): Future[Boolean] = {
-    implicit val timeout = GoogleAuthService.AuthenticateTimeout
-    val futureResult = actor ? GoogleAuthServiceActor.Authenticate(idToken)
+  def validate(idToken: JWT)(implicit executionContext: ExecutionContext): Future[Boolean] = {
+    implicit val timeout = GoogleTokenValidationService.ValidateTimeout
+    val futureResult = actor ? GoogleTokenValidationServiceActor.Validate(idToken)
 
     futureResult.map { result =>
       result.asInstanceOf[Boolean]

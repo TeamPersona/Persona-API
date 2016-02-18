@@ -6,7 +6,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 sealed class InvalidAccountOperationException extends RuntimeException
 
-class SlickAccountDAO(db: Database) extends AccountDAO {
+class SlickAccountDAO(db: Database) extends AccountDAO with CreatableAccountUtils {
 
   private[this] val accounts = TableQuery[AccountTable]
   private[this] val passwords = TableQuery[PasswordTable]
@@ -39,30 +39,6 @@ class SlickAccountDAO(db: Database) extends AccountDAO {
     } yield()).transactionally
 
     db.run(query).map(_ => ())
-  }
-
-  private[this] def toCreatableAccount(accountDescriptor: AccountDescriptor): CreatableAccount = {
-    CreatableAccount(
-      None,
-      accountDescriptor.givenName,
-      accountDescriptor.familyName,
-      accountDescriptor.emailAddress,
-      accountDescriptor.phoneNumber
-    )
-  }
-
-  private[this] def toAccount(creatableAccount: CreatableAccount): Account = {
-    creatableAccount.id.map { accountId =>
-      Account(
-        accountId,
-        creatableAccount.givenName,
-        creatableAccount.familyName,
-        creatableAccount.emailAddress,
-        creatableAccount.phoneNumber
-      )
-    } getOrElse {
-      throw new InvalidAccountOperationException
-    }
   }
 
 }

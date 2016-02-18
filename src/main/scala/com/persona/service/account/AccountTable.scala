@@ -10,6 +10,34 @@ case class CreatableAccount(
   emailAddress: String,
   phoneNumber: String)
 
+trait CreatableAccountUtils {
+
+  def toCreatableAccount(accountDescriptor: AccountDescriptor): CreatableAccount = {
+    CreatableAccount(
+      None,
+      accountDescriptor.givenName,
+      accountDescriptor.familyName,
+      accountDescriptor.emailAddress,
+      accountDescriptor.phoneNumber
+    )
+  }
+
+  def toAccount(creatableAccount: CreatableAccount): Account = {
+    creatableAccount.id.map { accountId =>
+      Account(
+        accountId,
+        creatableAccount.givenName,
+        creatableAccount.familyName,
+        creatableAccount.emailAddress,
+        creatableAccount.phoneNumber
+      )
+    } getOrElse {
+      throw new InvalidAccountOperationException
+    }
+  }
+
+}
+
 private class AccountTable(tag: Tag) extends Table[CreatableAccount](tag, "accounts") {
 
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
@@ -20,7 +48,7 @@ private class AccountTable(tag: Tag) extends Table[CreatableAccount](tag, "accou
 
   def * = (id.?, givenName, familyName, emailAddress, phoneNumber) <> (CreatableAccount.tupled, CreatableAccount.unapply)
 
-  def unique_email_address: Index = index("unique_email_address", emailAddress, unique = true)
-  def unique_phone_number: Index = index("unique_phone_number", phoneNumber, unique = true)
+  def uniqueEmailAddress: Index = index("unique_email_address", emailAddress, unique = true)
+  def uniquePhoneNumber: Index = index("unique_phone_number", phoneNumber, unique = true)
 
 }
