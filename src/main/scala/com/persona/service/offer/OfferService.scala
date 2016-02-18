@@ -14,8 +14,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 private object OfferServiceActor {
 
-  object ListOffers
-  case class GetOffer(id: UUID)
+  case class ListOffers(lastID: Int)
+  case class GetOffer(id: Int)
 
 }
 
@@ -24,18 +24,11 @@ private class OfferServiceActor(offerDAO: OfferDAO) extends Actor {
   private[this] implicit val executionContext = context.dispatcher
 
   def receive: Receive = {
-    case OfferServiceActor.ListOffers =>
-      offerDAO.list().pipeTo(sender)
+    case OfferServiceActor.ListOffers(lastID) =>
+      offerDAO.list(lastID).pipeTo(sender)
 
     case OfferServiceActor.GetOffer(id) =>
-      // TODO - Don't think we need this anymore
-      val NUM_100NS_INTERVALS_SINCE_UUID_EPOCH = 0x01b21dd213814000L
-      val epoch = (id.timestamp() - NUM_100NS_INTERVALS_SINCE_UUID_EPOCH) / 10000
-      val date = new DateTime(epoch)
-      val fmt = DateTimeFormat.forPattern("YYYY-MM-dd")
-      val dateStr = fmt.print(date)
-
-      offerDAO.get(id, dateStr).pipeTo(sender)
+      offerDAO.get(id).pipeTo(sender)
   }
 
 }
@@ -59,16 +52,16 @@ object OfferService {
 
 class OfferService private(actor: ActorRef) extends ActorWrapper(actor) {
 
-  def list()(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+  def list(lastID: Int)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
     implicit val timeout = OfferService.ListTimeout
-    val futureResult = actor ? OfferServiceActor.ListOffers
+    val futureResult = actor ? OfferServiceActor.ListOffers(lastID)
 
     futureResult.map { result =>
       result.asInstanceOf[Seq[Offer]]
     }
   }
 
-  def get(id: UUID)(implicit ec: ExecutionContext): Future[Option[Offer]] = {
+  def get(id: Int)(implicit ec: ExecutionContext): Future[Option[Offer]] = {
     implicit val timeout = OfferService.GetTimeout
     val futureResult = actor ? OfferServiceActor.GetOffer(id)
 
