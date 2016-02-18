@@ -1,5 +1,14 @@
 package com.persona.service.account
 
-import java.util.UUID
+case class AccountDescriptor(
+  givenName: String,
+  familyName: String,
+  emailAddress: String,
+  phoneNumber: String)
 
-case class Account(id: UUID)
+case class Account(
+  id: Int,
+  givenName: String,
+  familyName: String,
+  emailAddress: String,
+  phoneNumber: String)

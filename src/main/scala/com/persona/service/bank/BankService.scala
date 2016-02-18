@@ -97,7 +97,7 @@ class BankService private(actor: ActorRef) extends ActorWrapper(actor) {
 
   def saveInformation(account: Account, dataItem: DataItem)
                      (implicit ec: ExecutionContext): Future[ValidationNel[DataItemValidationError, ResultSet]] = {
-    implicit val validateTimeout = BankService.saveTimeout
+    implicit val timeout = BankService.saveTimeout
     val futureResult = actor ? BankServiceActor.SaveInformation(account, dataItem)
 
     futureResult.map { validationResult =>
