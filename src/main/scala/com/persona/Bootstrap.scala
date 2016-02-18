@@ -10,10 +10,11 @@ import com.persona.http.authorization.AuthorizationApi
 import com.persona.http.bank.BankApi
 import com.persona.http.chat.ChatApi
 import com.persona.http.offer.OfferApi
+import com.persona.service.account.google.{SlickGoogleAccountDAO, GoogleTokenConverter, GoogleAccountService}
 import com.persona.service.account.{AccountService, AccountValidator, SlickAccountDAO}
 import com.persona.service.authentication.PersonaAuthService
 import com.persona.service.authentication.facebook.FacebookAuthService
-import com.persona.service.authentication.google.GoogleAuthService
+import com.persona.service.authentication.google.GoogleTokenValidationService
 import com.persona.service.authorization.AuthorizationService
 import com.persona.service.bank.{BankService, CassandraBankDAO, DataItemValidator, JsonDataSchemaLoader}
 import com.persona.service.chat.ChatService
@@ -32,6 +33,8 @@ class Bootstrap
 
   private[this] val db = Database.forConfig("db", personaConfig)
 
+  private[this] val googleTokenValidationService = GoogleTokenValidationService(googleClientId, http)
+
   private[this] val authorizationService = new AuthorizationService
   private[this] val authorizationApi = new AuthorizationApi(authorizationService)
 
@@ -39,16 +42,14 @@ class Bootstrap
   private[this] val passwordLogRounds = personaConfig.getInt("passwordLogRounds")
   private[this] val accountDAO = new SlickAccountDAO(db)
   private[this] val accountService = AccountService(accountDAO, passwordLogRounds)
-  private[this] val accountApi = new AccountApi(accountService, accountValidator)
+  private[this] val googleTokenConverter = new GoogleTokenConverter
+  private[this] val googleAccountDAO = new SlickGoogleAccountDAO(db)
+  private[this] val googleAccountService = GoogleAccountService(googleTokenConverter, googleAccountDAO, googleTokenValidationService)
+  private[this] val accountApi = new AccountApi(accountService, accountValidator, googleAccountService)
 
   private[this] val personaAuthService = new PersonaAuthService
   private[this] val facebookAuthService = new FacebookAuthService
-  private[this] val googleAuthService = GoogleAuthService(googleClientId, http)
-  private[this] val authenticationApi = new AuthenticationApi(
-    personaAuthService,
-    facebookAuthService,
-    googleAuthService
-  )
+  private[this] val authenticationApi = new AuthenticationApi(personaAuthService, facebookAuthService)
 
   private[this] val bankDAO = new CassandraBankDAO()
   private[this] val dataSchemaLoader = new JsonDataSchemaLoader(personaConfig.getString("schemaDirectory"))

@@ -9,6 +9,12 @@ CREATE TABLE accounts
 
 CREATE TABLE passwords
 (
-    id SERIAL REFERENCES accounts,
+    id SERIAL PRIMARY KEY REFERENCES accounts,
     password TEXT NOT NULL
+);
+
+CREATE TABLE google_accounts
+(
+    id SERIAL PRIMARY KEY REFERENCES accounts,
+    google_id TEXT UNIQUE
 );
