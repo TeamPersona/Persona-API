@@ -28,7 +28,7 @@ sealed class AccountAlreadyExistsError extends AccountValidationError {
 object AccountValidator {
 
   private val Rfc2822 = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?".r
-  private val SimplePhoneNumber = "[0-9]{10}".r
+  private val SimplePhoneNumber = """\([0-9]{3}\) [0-9]{3}-[0-9]{4}""".r
 
 }
 

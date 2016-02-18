@@ -38,7 +38,7 @@ class SlickAccountDAO(db: Database) extends AccountDAO {
 
   def exists(accountDescriptor: AccountDescriptor)(implicit ec: ExecutionContext): Future[Boolean] = {
     val query = accounts.filter { account =>
-      account.emailAddress === accountDescriptor.emailAddress &&
+      account.emailAddress === accountDescriptor.emailAddress ||
       account.phoneNumber === accountDescriptor.phoneNumber
     }
 

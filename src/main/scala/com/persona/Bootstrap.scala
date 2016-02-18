@@ -10,7 +10,7 @@ import com.persona.http.authorization.AuthorizationApi
 import com.persona.http.bank.BankApi
 import com.persona.http.chat.ChatApi
 import com.persona.http.offer.OfferApi
-import com.persona.service.account.{AccountDescriptor, AccountService, SlickAccountDAO}
+import com.persona.service.account.{AccountService, AccountValidator, SlickAccountDAO}
 import com.persona.service.authentication.PersonaAuthService
 import com.persona.service.authentication.facebook.FacebookAuthService
 import com.persona.service.authentication.google.GoogleAuthService
@@ -35,9 +35,10 @@ class Bootstrap
   private[this] val authorizationService = new AuthorizationService
   private[this] val authorizationApi = new AuthorizationApi(authorizationService)
 
+  private[this] val accountValidator = new AccountValidator
   private[this] val accountDAO = new SlickAccountDAO(db)
   private[this] val accountService = AccountService(accountDAO)
-  private[this] val accountApi = new AccountApi(accountService)
+  private[this] val accountApi = new AccountApi(accountService, accountValidator)
 
   private[this] val personaAuthService = new PersonaAuthService
   private[this] val facebookAuthService = new FacebookAuthService
