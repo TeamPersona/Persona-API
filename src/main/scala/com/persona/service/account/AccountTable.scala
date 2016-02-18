@@ -10,6 +10,8 @@ case class CreatableAccount(
   emailAddress: String,
   phoneNumber: String)
 
+sealed class InvalidAccountOperationException extends RuntimeException
+
 trait CreatableAccountUtils {
 
   def toCreatableAccount(accountDescriptor: AccountDescriptor): CreatableAccount = {

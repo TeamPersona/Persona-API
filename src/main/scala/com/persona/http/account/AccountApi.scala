@@ -3,15 +3,17 @@ package com.persona.http.account
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
+
 import com.nimbusds.jwt.SignedJWT
+
 import com.persona.http.JsonPersonaError
 import com.persona.service.account.google.GoogleAccountService
 import com.persona.service.account.{AccountValidator, AccountDescriptor, AccountService}
 
-import spray.json._
-
 import scala.concurrent.ExecutionContext
 import scala.util.{Try, Failure, Success}
+
+import spray.json._
 
 class AccountApi
   (

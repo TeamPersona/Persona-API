@@ -1,29 +1,49 @@
 package com.persona.http.authentication
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
+import com.persona.service.authentication.AuthenticationService
 import com.persona.service.authentication.facebook.FacebookAuthService
-import com.persona.service.authentication.{BasicAuth, BasicAuthJsonProtocol, PersonaAuthService}
 
 import scala.concurrent.ExecutionContext
 
+import spray.json._
+
+import scala.util.{Failure, Success}
+
 class AuthenticationApi
   (
-    personaAuthService: PersonaAuthService,
+    authenticationService: AuthenticationService,
     facebookAuthService: FacebookAuthService
   )
   (
     implicit executionContext: ExecutionContext
   )
-  extends SprayJsonSupport
-    with BasicAuthJsonProtocol {
+  extends SprayJsonSupport{
 
   val route = {
     pathPrefix("authenticate") {
       pathEndOrSingleSlash {
         post {
-          formFields("id", "password").as(BasicAuth) { basicAuth =>
-            complete(personaAuthService.authenticate(basicAuth))
+          formField('grant_type) {
+            case "password" =>
+              formFields('email, 'password) { (email, password) =>
+                onComplete(authenticationService.authenticate(email, password)) {
+                  case Success(authenticated) =>
+                    if(authenticated) {
+                      complete("""{ "code": "abcdefghikl" }""".parseJson)
+                    } else {
+                      complete(StatusCodes.BadRequest)
+                    }
+
+                  case Failure(e) =>
+                    complete(StatusCodes.InternalServerError)
+                }
+              }
+
+            case _ =>
+              complete(StatusCodes.BadRequest)
           }
         }
       } ~

@@ -4,23 +4,25 @@ import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-sealed class InvalidAccountOperationException extends RuntimeException
-
 class SlickAccountDAO(db: Database) extends AccountDAO with CreatableAccountUtils {
 
   private[this] val accounts = TableQuery[AccountTable]
   private[this] val passwords = TableQuery[PasswordTable]
 
-  def retrieve(id: Int)(implicit ec: ExecutionContext): Future[Option[Account]] = {
-    val query = accounts.filter { account =>
-      account.id === id
+  def retrievePassword(email: String)(implicit ec: ExecutionContext): Future[Option[String]] = {
+    val join = for {
+      (account, password) <- accounts join passwords on (_.id === _.id)
+    } yield(account.emailAddress, password.password)
+
+    val where = join.filter { row =>
+      row._1 === email
     }
 
-    db.run(query.result.headOption).map { creatableAccountOption =>
-      creatableAccountOption.map { creatableAccount =>
-        toAccount(creatableAccount)
-      }
+    val select = where.map { row =>
+      row._2
     }
+
+    db.run(select.result.headOption)
   }
 
   def exists(accountDescriptor: AccountDescriptor)(implicit ec: ExecutionContext): Future[Boolean] = {
