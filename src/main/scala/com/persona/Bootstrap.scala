@@ -31,7 +31,7 @@ class Bootstrap
   (implicit actorSystem: ActorSystem, executionContext: ExecutionContext, materializer: Materializer) {
 
   private[this] val personaConfig = config.getConfig("persona")
-  private[this] val googleClientId = "407408718192.apps.googleusercontent.com" //personaConfig.getString("google_client_id")
+  private[this] val googleClientId = personaConfig.getString("google_client_id")
 
   private[this] val db = Database.forConfig("db", personaConfig)
 
