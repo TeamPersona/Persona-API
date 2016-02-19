@@ -1,30 +1,41 @@
 package com.persona.service.account.google
 
-import com.nimbusds.jwt.{JWTClaimsSet, JWT}
-import com.nimbusds.oauth2.sdk.ParseException
+import com.nimbusds.jwt.{JWT, JWTClaimsSet}
 import com.persona.service.account.AccountDescriptor
+
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 import scalaz.Scalaz._
 import scalaz.ValidationNel
 
+import scala.collection.JavaConversions._
+
 class GoogleTokenConverter {
 
-  def convert(idToken: JWT, phoneNumber: String): ValidationNel[GoogleAccountValidationError, GoogleAccountDescriptor] = {
-    try
-    {
-      val claims = idToken.getJWTClaimsSet
+  def convert(idToken: JWT): ValidationNel[GoogleAccountValidationError, String] = {
+    Try(subject(idToken.getJWTClaimsSet)) match {
+      case Success(subject) => subject
+      case Failure(NonFatal(e)) => (new BadClaimsFormatError).failureNel
+    }
+  }
 
+  def convert(idToken: JWT, phoneNumber: String): ValidationNel[GoogleAccountValidationError, GoogleAccountDescriptor] = {
+    val convertTry = Try {
+      val claims = idToken.getJWTClaimsSet
+      claims.getClaims.foreach(claim => Console.println(claim._1 + " " + claim._2))
       (subject(claims) |@|
-       email(claims) |@|
-       emailVerified(claims) |@|
-       givenName(claims) |@|
-       familyName(claims)) { (subject, email, _, givenName, familyName) =>
+        email(claims) |@|
+        emailVerified(claims) |@|
+        givenName(claims) |@|
+        familyName(claims)) { (subject, email, _, givenName, familyName) =>
         GoogleAccountDescriptor(AccountDescriptor(givenName, familyName, email, phoneNumber), subject)
       }
     }
-    catch
-    {
-      case e: ParseException => (new BadClaimsFormatError).failureNel
+
+    convertTry match {
+      case Success(result) => result
+      case Failure(NonFatal(e)) => (new BadClaimsFormatError).failureNel
     }
   }
 

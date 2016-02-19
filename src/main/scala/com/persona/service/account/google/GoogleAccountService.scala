@@ -9,8 +9,8 @@ import com.nimbusds.jwt.JWT
 import com.persona.service.authentication.google.GoogleTokenValidationService
 import com.persona.util.actor.ActorWrapper
 
-import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Future, ExecutionContext}
 import scala.util.{Failure, Success}
 
 import scalaz.Scalaz._

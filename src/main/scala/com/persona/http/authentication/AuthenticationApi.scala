@@ -3,19 +3,18 @@ package com.persona.http.authentication
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
+import com.nimbusds.jwt.SignedJWT
 import com.persona.service.authentication.AuthenticationService
-import com.persona.service.authentication.facebook.FacebookAuthService
-
-import scala.concurrent.ExecutionContext
-
+import com.persona.service.authentication.google.{ValidTokenAndAccountResult, ValidTokenInvalidAccountResult, InvalidTokenAndAccountResult, GoogleAuthenticationService}
 import spray.json._
 
-import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
+import scala.util.{Try, Failure, Success}
 
 class AuthenticationApi
   (
     authenticationService: AuthenticationService,
-    facebookAuthService: FacebookAuthService
+    googleAuthenticationService: GoogleAuthenticationService
   )
   (
     implicit executionContext: ExecutionContext
@@ -47,18 +46,29 @@ class AuthenticationApi
           }
         }
       } ~
-      path("facebook") {
-        pathEndOrSingleSlash {
-          post {
-            complete(facebookAuthService.authenticate)
-          }
-        }
-      } ~
       path("google") {
         pathEndOrSingleSlash {
           post {
             formField("id_token") { jwt =>
-              complete("TODO")
+              Try(SignedJWT.parse(jwt)) match {
+                case Success(idToken) =>
+                  onComplete(googleAuthenticationService.authenticate(idToken)) {
+                    case Success(_: ValidTokenAndAccountResult) =>
+                      complete("""{ "code": "abcdefghikl" }""".parseJson)
+
+                    case Success(_: ValidTokenInvalidAccountResult) =>
+                      complete(StatusCodes.NotFound)
+
+                    case Success(_: InvalidTokenAndAccountResult) =>
+                      complete(StatusCodes.BadRequest)
+
+                    case Failure(e) =>
+                      complete(StatusCodes.InternalServerError)
+                  }
+
+                case Failure(e) =>
+                  complete(StatusCodes.BadRequest)
+              }
             }
           }
         }
