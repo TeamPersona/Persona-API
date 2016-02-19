@@ -4,22 +4,24 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
+
 import com.persona.http.account.AccountApi
 import com.persona.http.authentication.AuthenticationApi
 import com.persona.http.authorization.AuthorizationApi
 import com.persona.http.bank.BankApi
 import com.persona.http.chat.ChatApi
 import com.persona.http.offer.OfferApi
-import com.persona.service.account.google.{SlickGoogleAccountDAO, GoogleTokenConverter, GoogleAccountService}
+import com.persona.service.account.google.{GoogleAccountService, GoogleTokenConverter, SlickGoogleAccountDAO}
 import com.persona.service.account.{AccountService, AccountValidator, SlickAccountDAO}
 import com.persona.service.authentication.AuthenticationService
-import com.persona.service.authentication.facebook.FacebookAuthService
-import com.persona.service.authentication.google.GoogleTokenValidationService
+import com.persona.service.authentication.google.{GoogleAuthenticationService, GoogleTokenValidationService}
 import com.persona.service.authorization.AuthorizationService
 import com.persona.service.bank.{BankService, CassandraBankDAO, DataItemValidator, JsonDataSchemaLoader}
 import com.persona.service.chat.ChatService
 import com.persona.service.offer.{CassandraOfferDAO, OfferService}
+
 import com.typesafe.config.Config
+
 import slick.jdbc.JdbcBackend._
 
 import scala.concurrent.ExecutionContext
@@ -48,8 +50,8 @@ class Bootstrap
   private[this] val accountApi = new AccountApi(accountService, accountValidator, googleAccountService)
 
   private[this] val authenticationService = AuthenticationService(accountDAO)
-  private[this] val facebookAuthService = new FacebookAuthService
-  private[this] val authenticationApi = new AuthenticationApi(authenticationService, facebookAuthService)
+  private[this] val googleAuthenticationService = GoogleAuthenticationService(googleTokenConverter, googleAccountDAO, googleTokenValidationService)
+  private[this] val authenticationApi = new AuthenticationApi(authenticationService, googleAuthenticationService)
 
   private[this] val bankDAO = new CassandraBankDAO()
   private[this] val dataSchemaLoader = new JsonDataSchemaLoader(personaConfig.getString("schemaDirectory"))

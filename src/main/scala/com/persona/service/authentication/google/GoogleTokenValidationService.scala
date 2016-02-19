@@ -18,8 +18,8 @@ import scala.util.Try
 
 private object GoogleTokenValidationServiceActor {
 
-  val DiscoveryDocumentUrl = "https://accounts.google.com/.well-known/openid-configuration"
-  val Issuers = List("https://accounts.google.com", "accounts.google.com")
+  private val DiscoveryDocumentUrl = "https://accounts.google.com/.well-known/openid-configuration"
+  private val Issuers = List("https://accounts.google.com", "accounts.google.com")
 
   case class Validate(idToken: JWT)
 
