@@ -46,6 +46,7 @@ class ChatRoomActor(offerId: UUID, chatDAO: ChatDAO) extends Actor {
 
     case msg: HistoryMessage =>
       participants.get(msg.user).get ! msg.msg
+
   }
 
   /*

@@ -41,7 +41,7 @@ class ChatDAO(db: Database) {
     db.run(query)
   }
 
-  def storeMsg(offerId: UUID, userid: String, message: ChatMessage): Unit = {
+  def storeMsg(offerId: UUID, userid: String, message: ChatMessage) = {
     val query = msgHistory += MsgHistory(0, offerId, userid, 1, message.user, message.msg)
     db.run(query)
   }
