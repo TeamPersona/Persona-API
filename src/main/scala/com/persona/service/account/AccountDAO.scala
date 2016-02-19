@@ -4,7 +4,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait AccountDAO {
 
-  def retrieve(id: Int)(implicit ec: ExecutionContext): Future[Option[Account]]
+  def retrievePassword(email: String)(implicit ec: ExecutionContext): Future[Option[String]]
 
   def exists(accountDescriptor: AccountDescriptor)(implicit ec: ExecutionContext): Future[Boolean]
 

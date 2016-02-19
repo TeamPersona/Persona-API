@@ -12,7 +12,7 @@ import com.persona.http.chat.ChatApi
 import com.persona.http.offer.OfferApi
 import com.persona.service.account.google.{SlickGoogleAccountDAO, GoogleTokenConverter, GoogleAccountService}
 import com.persona.service.account.{AccountService, AccountValidator, SlickAccountDAO}
-import com.persona.service.authentication.PersonaAuthService
+import com.persona.service.authentication.AuthenticationService
 import com.persona.service.authentication.facebook.FacebookAuthService
 import com.persona.service.authentication.google.GoogleTokenValidationService
 import com.persona.service.authorization.AuthorizationService
@@ -47,9 +47,9 @@ class Bootstrap
   private[this] val googleAccountService = GoogleAccountService(googleTokenConverter, googleAccountDAO, googleTokenValidationService)
   private[this] val accountApi = new AccountApi(accountService, accountValidator, googleAccountService)
 
-  private[this] val personaAuthService = new PersonaAuthService
+  private[this] val authenticationService = AuthenticationService(accountDAO)
   private[this] val facebookAuthService = new FacebookAuthService
-  private[this] val authenticationApi = new AuthenticationApi(personaAuthService, facebookAuthService)
+  private[this] val authenticationApi = new AuthenticationApi(authenticationService, facebookAuthService)
 
   private[this] val bankDAO = new CassandraBankDAO()
   private[this] val dataSchemaLoader = new JsonDataSchemaLoader(personaConfig.getString("schemaDirectory"))
