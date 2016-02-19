@@ -1,8 +1,15 @@
 language: scala
+
 scala:
 - 2.11.7
+
 jdk:
 - oraclejdk8
+
+branches:
+  only:
+    - master
+
 notifications:
   email: false
   slack:
@@ -11,7 +18,9 @@ notifications:
     on_start: never
     on_pull_requests: false
     secure: HDdjGJi20wT29+4cuG1wJmaMYSfXszPUdQyRfcZOsuiqw4wE+vlFGgZ4cBU2ENNf5Iy9GksQLvp4eMxXcuGEDJIE+vApchMgdNnz4iGPZOcjlfmWxClWRCNX6uw+tXQfPn+Pu9TtvWANd6ZuC5flAl8MWNOmmS46gqeAlG5MtRkn8GVw65LuFMryf+4muYG5YFZSkF2SgVswa1qBdlo0/2xdr25QJqRybatSNmolbgLys0Qz4br1EIfEsUL3QQl3/7a66OYcEJL6A5IMAMaH+Uk7p4Py3bD7bGD7haNFDXTPuVlyK/bRdavSwmTu/pjzPe+BxeyXJac9Zn+Vr65KnhnTAV7o+8FjbqxzlPjr0sv4k6iEEnnLtAkVaq3wB+b08RfROehbBrET54U2YF6PbOeoqtRHp/lySqCegaecbbiQN8IVgr03qErR3iUdW+MbsOrKz+LWqmmU3sW9QgbAJzjk62Q6D1WBGmQcIV5FQBZpnPEDFtetq56KwGZ9uDokcClHnVKZxzqfuBugQY0oAXR4WUfvvxCebhbNZSb7GxA1DIh0u0OWY5tx62XmQZTOsYVfl0gwgDuTZ5QJVFUF3BBU07tyI9tfY7Te7Jcmx5ewjIZg5bK+/TjHyx/2invVAJJmhS6FO7LtievanCxTxcXPTr21BVWOYQLOcaIopw8=
+
 script:
 - sbt clean coverage test
+
 after_success:
 - sbt coveralls
