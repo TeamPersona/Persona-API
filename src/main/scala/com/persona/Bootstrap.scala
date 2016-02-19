@@ -1,5 +1,7 @@
 package com.persona
 
+import java.security.SecureRandom
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.server.Directives._
@@ -12,6 +14,7 @@ import com.persona.http.bank.BankApi
 import com.persona.http.chat.ChatApi
 import com.persona.http.offer.OfferApi
 import com.persona.service.account.google.{GoogleAccountService, GoogleTokenConverter, SlickGoogleAccountDAO}
+import com.persona.service.account.thirdparty.SlickThirdPartAccountDAO
 import com.persona.service.account.{AccountService, AccountValidator, SlickAccountDAO}
 import com.persona.service.authentication.AuthenticationService
 import com.persona.service.authentication.google.{GoogleAuthenticationService, GoogleTokenValidationService}
@@ -35,10 +38,13 @@ class Bootstrap
 
   private[this] val db = Database.forConfig("db", personaConfig)
 
+  private[this] val secureRandom = new SecureRandom
+
   private[this] val googleTokenValidationService = GoogleTokenValidationService(googleClientId, http)
 
+  private[this] val thirdPartyAccountDAO = new SlickThirdPartAccountDAO(db, secureRandom)
   private[this] val authorizationService = new AuthorizationService
-  private[this] val authorizationApi = new AuthorizationApi(authorizationService)
+  private[this] val authorizationApi = new AuthorizationApi(thirdPartyAccountDAO, authorizationService)
 
   private[this] val accountValidator = new AccountValidator
   private[this] val passwordLogRounds = personaConfig.getInt("passwordLogRounds")

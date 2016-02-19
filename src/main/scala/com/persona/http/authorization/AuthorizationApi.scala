@@ -2,17 +2,19 @@ package com.persona.http.authorization
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.Directives._
-
+import com.persona.service.account.thirdparty.ThirdPartyAccountDAO
 import com.persona.service.authorization.AuthorizationService
-
 import spray.json._
 
-class AuthorizationApi(tokenService: AuthorizationService) extends SprayJsonSupport {
+class AuthorizationApi(
+  thirdPartyAccountDAO: ThirdPartyAccountDAO,
+  authorizationService: AuthorizationService)
+  extends SprayJsonSupport {
 
   val route = {
-    pathPrefix("authorization") {
+    pathPrefix("authorize") {
       pathEndOrSingleSlash {
-        get {
+        post {
           complete(
             """
             {
