@@ -9,8 +9,6 @@ import scala.util.{Failure, Success, Try}
 import scalaz.Scalaz._
 import scalaz.ValidationNel
 
-import scala.collection.JavaConversions._
-
 class GoogleTokenConverter {
 
   def convert(idToken: JWT): ValidationNel[GoogleAccountValidationError, String] = {
@@ -23,7 +21,7 @@ class GoogleTokenConverter {
   def convert(idToken: JWT, phoneNumber: String): ValidationNel[GoogleAccountValidationError, GoogleAccountDescriptor] = {
     val convertTry = Try {
       val claims = idToken.getJWTClaimsSet
-      claims.getClaims.foreach(claim => Console.println(claim._1 + " " + claim._2))
+      
       (subject(claims) |@|
         email(claims) |@|
         emailVerified(claims) |@|
