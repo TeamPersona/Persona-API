@@ -1,9 +1,8 @@
 package com.persona.service.offer
 
 import org.joda.time.DateTime
-import slick.backend.DatabaseConfig
-import slick.driver.JdbcProfile
 
+import scala.collection.immutable.HashMap
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -19,17 +18,15 @@ class OfferDataTable(tag: Tag) extends Table[OfferBasicInfo] (tag,"view_offerdat
   def partnerID = column[Int]("partnerid")
   def partnerImageUrl = column[String]("partnerimageurl")
   def offerDetails = column[String]("offerdetails")
-  def offerCategory = column[String]("offercategory")
-  def offerType = column[String]("offertype")
-  def offerStatus = column[String]("offerstatus")
-  def rewardTier = column[Option[Int]]("mintierid")
-  def maxParticipants = column[Int]("maxparticipants")
-  def startTime = column[DateTime]("startingtime")
-  def endTime = column[DateTime]("endingtime")
-  def reward = column[Double]("reward")
-  def currentParticipants = column[Int]("numparticipants")
+  def offerStatus = column[Int]("offerstatusid")
+  def offerMinRank = column[Option[Int]]("mintierid")
+  def offerMaxParticipants = column[Int]("maxparticipants")
+  def offerStartDate = column[DateTime]("startingtime")
+  def offerExpirationDate = column[DateTime]("endingtime")
+  def offerReward = column[Double]("reward")
+  def offerCurrentParticipants = column[Int]("numparticipants")
 
-  def *  = (offerID, partnerName, partnerID, partnerImageUrl, offerDetails, offerCategory, offerType, offerStatus, rewardTier, maxParticipants, startTime, endTime, reward, currentParticipants) <> (OfferBasicInfo.tupled, OfferBasicInfo.unapply)
+  def *  = (offerID, partnerName, partnerID, partnerImageUrl, offerDetails, offerStatus, offerMinRank, offerMaxParticipants, offerStartDate, offerExpirationDate, offerReward, offerCurrentParticipants) <> (OfferBasicInfo.tupled, OfferBasicInfo.unapply)
 
 }
 
@@ -43,7 +40,7 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
     val offerBasicInfo = listBasic(lastID)
     offerBasicInfo.map[Seq[Offer]]{ optionOfferInfo =>
       optionOfferInfo.map { offerInfo =>
-        Offer (offerInfo, getRequiredCategories(offerInfo.offerID), getEligibleBasic(offerInfo.offerID)) //TODO: need eligibility from other data
+        Offer (offerInfo, getTypes(offerInfo.offerID), getFilters(offerInfo.offerID), getRequiredInfo(offerInfo.offerID), getEligibleBasic(offerInfo.offerID), getParticipating(offerInfo.offerID)) //TODO: need eligibility from other data
       }
     }
   }
@@ -52,7 +49,7 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
     val offerBasicInfo = getBasic(getId)
     offerBasicInfo.map[Option[Offer]]{ optionOfferInfo =>
       optionOfferInfo.map { offerInfo =>
-        Offer (offerInfo, getRequiredCategories(offerInfo.offerID), getEligibleBasic(offerInfo.offerID)) //TODO: need eligibility from other data
+        Offer (offerInfo, getTypes(offerInfo.offerID), getFilters(offerInfo.offerID), getRequiredInfo(offerInfo.offerID), getEligibleBasic(offerInfo.offerID), getParticipating(offerInfo.offerID)) //TODO: need eligibility from other data
       }
     }
   }
@@ -68,51 +65,156 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
     db.run(action)
   }
 
-  private def getRequiredCategories (getId: Int)(implicit ec: ExecutionContext): List[OfferCriterionDescriptor] = {
-    val returnDescriptors = ListBuffer[OfferCriterionDescriptor]()
-    getRequiredCategoriesSQL(getId) match {
-      case Success(criteria) => {
-        criteria.foreach(criterion => returnDescriptors += OfferCriterionDescriptor(criterion._1, criterion._2))
-        returnDescriptors.toList
+  private def getFilters (getId: Int)(implicit ec: ExecutionContext): List[OfferFilter] = {
+    var returnFilter = ListBuffer[OfferFilter]()
+    var filterMap: Map[String, ListBuffer[String]] = Map[String, ListBuffer[String]]()
+    getFiltersSQL(getId) match {
+      case Success(filters) => {
+        filters.foreach { filter =>
+          if (filterMap.contains(filter._1)) {
+            filterMap(filter._1) += filter._2
+          } else {
+            filterMap += filter._1 ->  ListBuffer(filter._2)
+          }
+        }
+        filterMap.foreach { case (k, v) =>
+          returnFilter += createOfferFilter(k, v)
+        }
+        returnFilter.toList
       }
-      case Failure(f) => List[OfferCriterionDescriptor]()
+      case Failure(f) => List[OfferFilter]()
     }
   }
+
+
+  private def getFiltersSQL(getId: Int)(implicit ec: ExecutionContext): Try[Vector[(String, String)]] = {
+    val offerid = getId.toString
+    val action = sql"""SELECT
+                       picategory.category,
+                       pifields.pifield
+                       FROM offercriteria
+                       INNER JOIN pifields
+                         ON offercriteria.pifieldid = pifields.pifieldid
+                       INNER JOIN picategory
+                         ON picategory.picategoryid = pifields.picategoryid
+                       WHERE offercriteria.offercriteriasubindex = 1
+                       AND offercriteria.offerid = #$offerid""".as[(String, String)]
+    val criteria = db.run(action)
+    Await.ready(criteria, Duration.Inf).value.get
+
+  }
+
+  private def getRequiredInfo (getId: Int)(implicit ec: ExecutionContext): List[OfferFilter] = {
+    var returnFilter = ListBuffer[OfferFilter]()
+    var filterMap: Map[String, ListBuffer[String]] = Map[String, ListBuffer[String]]()
+    getRequiredInfoSQL(getId) match {
+      case Success(filters) => {
+        filters.foreach { filter =>
+          if (filterMap.contains(filter._1)) {
+            filterMap(filter._1) += filter._2
+          } else {
+            filterMap += filter._1 ->  ListBuffer(filter._2)
+          }
+        }
+        filterMap.foreach { case (k, v) =>
+          returnFilter += createOfferFilter(k, v)
+        }
+        returnFilter.toList
+      }
+      case Failure(f) => List[OfferFilter]()
+    }
+  }
+
+
+  private def getRequiredInfoSQL(getId: Int)(implicit ec: ExecutionContext): Try[Vector[(String, String)]] = {
+    val offerid = getId.toString
+    val action = sql"""SELECT
+                       picategory.category,
+                       pifields.pifield
+                       FROM offerinforequired
+                       INNER JOIN pifields
+                       	ON offerinforequired.pifieldid = pifields.pifieldid
+                       INNER JOIN picategory
+                       	ON picategory.picategoryid = pifields.picategoryid
+                       WHERE offerinforequired.offerid = #$offerid""".as[(String, String)]
+    val criteria = db.run(action)
+    Await.ready(criteria, Duration.Inf).value.get
+
+  }
+
+
+  private def createOfferFilter(category: String, filters: ListBuffer[String]) : OfferFilter = {
+    var filterList = ListBuffer[OfferCriterionDescriptor]()
+    filters.foreach { filter =>
+      filterList += OfferCriterionDescriptor(filter, true) //TODO: get from taylor
+    }
+    OfferFilter(category, filterList.toList)
+  }
+
+  private def getTypes (getId: Int)(implicit ec: ExecutionContext): List[String] = {
+    geTypesSQL(getId) match {
+      case Success(filters) => {
+        filters.toList
+      }
+      case Failure(f) => List()
+    }
+  }
+
 
   //TODO: need to return the categories that are not basic info, and check them in cassandra
-  private def getRequiredCategoriesSQL(getId: Int)(implicit ec: ExecutionContext): Try[Vector[(String, Boolean)]] = {
+  private def geTypesSQL(getId: Int)(implicit ec: ExecutionContext): Try[Vector[(String)]] = {
     val offerid = getId.toString
     val userID = 5 //TODO: get userID
-    val action = sql"""SELECT pifields.pifield,
-                        CASE WHEN pi.pifieldid is null THEN 'true'
-                          ELSE 'false' END AS isMissing
-                        FROM offercriteria
-                        INNER JOIN pifields
-                          ON offercriteria.pifieldid = pifields.pifieldid
-                        LEFT JOIN (SELECT * FROM personalinformation WHERE personalinformation.userid = #$userID) AS pi
-                          ON offercriteria.pifieldid = pi.pifieldid
-                        WHERE offercriteria.offercriteriasubindex = 1
-                        AND offercriteria.offerid = #$offerid""".as[(String, Boolean)]
+    val action = sql"""SELECT offertypes.offertype
+                        FROM offercategories
+                        INNER JOIN offertypes
+                       	ON offercategories.offertypeid = offertypes.offertypeid
+                       WHERE offercategories.offerid =  #$offerid
+                       ORDER BY offercategories.typeindex""".as[(String)]
     val criteria = db.run(action)
     Await.ready(criteria, Duration.Inf).value.get
 
   }
 
-  private def getEligibleBasic (getId: Int)(implicit ec: ExecutionContext): Boolean = {
-    getEligibleBasicSQL(getId) match {
-      case Success(eligible) => eligible.getOrElse(false)
-      case Failure(f) => false
+  private def getParticipating (getId: Int)(implicit ec: ExecutionContext): Boolean = {
+    getParticipatingSQL(getId) match {
+          case Success(participating) => participating.getOrElse(false)
+          case Failure(f) => false
+        }
+  }
+
+
+
+    private def getParticipatingSQL(getId: Int)(implicit ec: ExecutionContext): Try[Option[Boolean]] = {
+      val offerid = getId.toString
+      val userID = 5 //TODO: get userID
+      val action = sql"SELECT CASE WHEN part >= 1 THEN TRUE ELSE FALSE END FROM (SELECT COUNT(*) as part FROM offerparticipation WHERE offerid = #$offerid AND userid = #$userID) as participating;".as[(Boolean)].headOption
+      val criteria = db.run(action)
+      Await.ready(criteria, Duration.Inf).value.get
+
     }
+
+
+
+  // TODO: call taylor's to get this
+  private def getEligibleBasic (getId: Int)(implicit ec: ExecutionContext): Boolean = {
+    true
+//    getEligibleBasicSQL(getId) match {
+//      case Success(eligible) => eligible.getOrElse(false)
+//      case Failure(f) => false
+//    }
   }
 
-  private def getEligibleBasicSQL(getId: Int)(implicit ec: ExecutionContext): Try[Option[Boolean]] = {
-    val offerid = getId.toString
-    val userID = 5 //TODO: get userID
-    val action = sql"SELECT iseligible(#$offerid,#$userID); ".as[(Boolean)].headOption
-    val criteria = db.run(action)
-    Await.ready(criteria, Duration.Inf).value.get
 
-  }
+//
+//  private def getEligibleBasicSQL(getId: Int)(implicit ec: ExecutionContext): Try[Option[Boolean]] = {
+//    val offerid = getId.toString
+//    val userID = 5 //TODO: get userID
+//    val action = sql"SELECT iseligible(#$offerid,#$userID); ".as[(Boolean)].headOption
+//    val criteria = db.run(action)
+//    Await.ready(criteria, Duration.Inf).value.get
+//
+//  }
 
 
 

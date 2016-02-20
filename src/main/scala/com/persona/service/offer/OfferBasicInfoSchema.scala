@@ -7,22 +7,21 @@ class OfferBasicInfoSchema private(val offerID: Int,
                                    val partnerID: Int,
                                    val partnerImageUrl: String,
                                    val offerDetails: String,
-                                   val offerCategory: String,
-                                   val offerType: String,
-                                   val offerStatus: String,
-                                   val rewardTier: Option[Int],
-                                   val maxParticipants: Int,
-                                   val startTime: DateTime,
-                                   val endTime: DateTime,
-                                   val reward: Double,
-                                   val currentParticipants: Int) {
+                                   val offerStatus: Int,
+                                   val offerMinRank: Option[Int],
+                                   val offerMaxParticipants: Int,
+                                   val offerStartDate: DateTime,
+                                   val offerExpirationDate: DateTime,
+                                   val offerReward: Double,
+                                   val offerCurrentParticipants: Int) {
 
 }
 
 object OfferBasicInfoSchema {
 
-  def apply(offerID: Int, partnerName: String, partnerID: Int, partnerImageUrl: String, offerDetails: String, offerCategory: String, offerType: String, offerStatus: String, rewardTier: Option[Int], maxParticipants: Int, startTime: DateTime, endTime: DateTime, reward: Double, currentParticipants: Int) : OfferBasicInfoSchema = {
-    new OfferBasicInfoSchema(offerID, partnerName, partnerID, partnerImageUrl, offerDetails, offerCategory, offerType, offerStatus, rewardTier, maxParticipants, startTime, endTime, reward, currentParticipants)
+  def apply(offerID: Int, partnerName: String, partnerID: Int, partnerImageUrl: String, offerDetails: String, offerStatus: Int, offerMinRank: Option[Int], offerMaxParticipants: Int, offerStartDate: DateTime, offerExpirationDate: DateTime, offerReward: Double, offerCurrentParticipants: Int) : OfferBasicInfoSchema = {
+
+    new OfferBasicInfoSchema(offerID, partnerName, partnerID, partnerImageUrl, offerDetails, offerStatus, offerMinRank, offerMaxParticipants, offerStartDate, offerExpirationDate, offerReward, offerCurrentParticipants)
   }
 
 }

@@ -9,20 +9,18 @@ case class OfferBasicInfo(offerID: Int,
                           partnerID: Int,
                           partnerImageUrl: String,
                           offerDetails: String,
-                          offerCategory: String,
-                          offerType: String,
-                          offerStatus: String,
-                          rewardTier: Option[Int],
-                          maxParticipants: Int,
-                          startTime: DateTime,
-                          endTime: DateTime,
-                          reward: Double,
-                          currentParticipants: Int) {
+                          offerStatus: Int,
+                          offerMinRank: Option[Int],
+                          offerMaxParticipants: Int,
+                          offerStartDate: DateTime,
+                          offerExpirationDate: DateTime,
+                          offerReward: Double,
+                          offerCurrentParticipants: Int) {
 
 }
 
 trait OfferBasicInfoJsonProtocol extends DefaultJsonProtocol with NullOptions with DateTimeJsonProtocol {
 
-  implicit val offerBasicJsonParser = jsonFormat14(OfferBasicInfo)
+  implicit val offerBasicJsonParser = jsonFormat12(OfferBasicInfo)
 
 }

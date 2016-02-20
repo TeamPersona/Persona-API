@@ -47,32 +47,3 @@ class OfferApi(offerService: OfferService)(implicit ec: ExecutionContext)
   }
 }
 
-//pathEndOrSingleSlash {
-//  get {
-//  onComplete(offerService.list(1)) {
-//  case Success(offers) => complete(StatusCodes.OK, offers.toJson)
-//  case Failure(e) => complete(StatusCodes.InternalServerError)
-//}
-//} ~
-//  path(Segment) { seg =>
-//  val id = seg.toInt
-//
-//  pathEndOrSingleSlash {
-//  onComplete(offerService.get(id)) {
-//  case Success(maybeOffer) =>
-//  maybeOffer.map { offer =>
-//  complete(StatusCodes.OK, offer.toJson)
-//} getOrElse {
-//  complete(StatusCodes.NotFound)
-//}
-//
-//  case Failure(e) => complete(StatusCodes.InternalServerError)
-//}
-//} ~
-//  pathPrefix("participate") {
-//  pathEndOrSingleSlash {
-//  complete(StatusCodes.InternalServerError, "TODO")
-//}
-//}
-//}
-//}
