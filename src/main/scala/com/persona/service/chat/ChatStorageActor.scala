@@ -20,7 +20,7 @@ class ChatStorageActor(chatDAO: ChatDAO) extends Actor {
       chatDAO.fetchMsgHistory(evt.offerId, evt.userid)
         .onComplete {
           case Success(msgs) => {
-            msgs.foreach(msg => roomActor ! HistoryMessage(msg._1, ChatMessage(msg._2, msg._3)))
+            msgs.foreach(msg => roomActor ! HistoryMessage(msg._1, ChatMessage(msg._2, msg._3, msg._4)))
           }
 
           case Failure(e) => {

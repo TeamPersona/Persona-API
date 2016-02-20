@@ -24,10 +24,9 @@ CREATE TABLE msg_history
     msg_id SERIAL,
     offerid UUID NOT NULL,
     userid TEXT NOT NULL,
-    type INTEGER NOT NULL,
-    sender TEXT NOT NULL,
-    message TEXT
+    type INTEGER,
+    sender TEXT,
+    message TEXT,
+    timestamp TIMESTAMP
 );
-
 CREATE INDEX idx_msghistory ON msg_history (offerid, userid);
-

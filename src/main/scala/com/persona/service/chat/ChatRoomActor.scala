@@ -4,6 +4,7 @@ import java.util.UUID
 
 import akka.actor.{Props, ActorRef, Actor}
 import com.persona.service.chat.dao.ChatDAO
+import org.joda.time.DateTime
 
 class ChatRoomActor(offerId: UUID, chatDAO: ChatDAO) extends Actor {
 
@@ -13,19 +14,18 @@ class ChatRoomActor(offerId: UUID, chatDAO: ChatDAO) extends Actor {
   val dbWorker = context.actorOf(Props(classOf[ChatStorageActor], chatDAO))
 
   override def receive = {
-    case Connect(user, ref) =>
+    case Connect(user, timestamp, ref) =>
       userType(user) match {
         case UserType.Consumer =>
           participants += user -> ref
-          supports.values.foreach(_ ! ChatMessage(user, "Joined"))
+          supports.values.foreach(_ ! ChatMessage(user, "Joined", timestamp))
           dbWorker ! FetchHistory(offerId, user)
-          dbWorker ! PersistMsg(offerId, user, ChatMessage(user, "Joined"))
 
         case UserType.Partner =>
           supports += user -> ref
       }
 
-    case Disconnect(user) =>
+    case Disconnect(user, timestamp) =>
       userType(user) match {
         case UserType.Consumer =>
           participants -= user
@@ -33,9 +33,9 @@ class ChatRoomActor(offerId: UUID, chatDAO: ChatDAO) extends Actor {
           supports -= user
       }
 
-    case ack: AckMessage =>
-      dbWorker ! PersistMsg(offerId, ack.user, ChatMessage(ack.user, "Seen"))
-      supports.values.foreach(_ ! ChatMessage(ack.user, "Seen"));
+    case AckMessage(user, timestamp) =>
+      dbWorker ! PersistMsg(offerId, user, ChatMessage(user, "Seen", timestamp))
+      supports.values.foreach(_ ! ChatMessage(user, "Seen", timestamp));
 
     case msg: ChatMessage =>
       if(userType(msg.user) == UserType.Partner) {

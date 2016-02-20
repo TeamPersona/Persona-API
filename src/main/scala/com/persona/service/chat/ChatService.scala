@@ -13,14 +13,14 @@ class ChatService(dataAccess: ChatDAO)(implicit actorSystem: ActorSystem, materi
   implicit val chatDAO = dataAccess
 
   def chat(offerId: UUID, user: String) = {
-    ChatRooms.find(offerId) match {
+    ChatRoom.find(offerId) match {
       case Some(room) => handleWebsocketMessages(room.websocketFlow(user))
       case None => complete(StatusCodes.NotFound)
     }
   }
 
   def createRoom(offerId: UUID): Unit = {
-    ChatRooms.createRoom(offerId)
+    ChatRoom.createRoom(offerId)
   }
 
 }
