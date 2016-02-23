@@ -40,7 +40,7 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
     val offerBasicInfo = listBasic(lastID)
     offerBasicInfo.map[Seq[Offer]]{ optionOfferInfo =>
       optionOfferInfo.map { offerInfo =>
-        Offer (offerInfo, getTypes(offerInfo.offerID), getFilters(offerInfo.offerID), getRequiredInfo(offerInfo.offerID), getEligibleBasic(offerInfo.offerID), getParticipating(offerInfo.offerID)) //TODO: need eligibility from other data
+        new Offer (offerInfo, getTypes(offerInfo.offerID), getFilters(offerInfo.offerID), getRequiredInfo(offerInfo.offerID), getEligibleBasic(offerInfo.offerID), getParticipating(offerInfo.offerID)) //TODO: need eligibility from other data
       }
     }
   }
@@ -49,11 +49,10 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
     val offerBasicInfo = getBasic(getId)
     offerBasicInfo.map[Option[Offer]]{ optionOfferInfo =>
       optionOfferInfo.map { offerInfo =>
-        Offer (offerInfo, getTypes(offerInfo.offerID), getFilters(offerInfo.offerID), getRequiredInfo(offerInfo.offerID), getEligibleBasic(offerInfo.offerID), getParticipating(offerInfo.offerID)) //TODO: need eligibility from other data
+       new Offer (offerInfo, getTypes(offerInfo.offerID), getFilters(offerInfo.offerID), getRequiredInfo(offerInfo.offerID), getEligibleBasic(offerInfo.offerID), getParticipating(offerInfo.offerID)) //TODO: need eligibility from other data
       }
     }
   }
-
 
   def listBasic(lastID: Int)(implicit ec: ExecutionContext): Future[Seq[OfferBasicInfo]] = {
     val action = offers.filter(_.offerID > lastID).take(25).result
@@ -65,27 +64,18 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
     db.run(action)
   }
 
-  private def getFilters (getId: Int)(implicit ec: ExecutionContext): List[OfferFilter] = {
-    var returnFilter = ListBuffer[OfferFilter]()
-    var filterMap: Map[String, ListBuffer[String]] = Map[String, ListBuffer[String]]()
+  private def getFilters (getId: Int)(implicit ec: ExecutionContext): Map[String, List[Map[String, String]]] = {
+    var filterMap: Map[String, List[Map[String, String]]] = Map[String, List[Map[String, String]]]()
     getFiltersSQL(getId) match {
       case Success(filters) => {
-        filters.foreach { filter =>
-          if (filterMap.contains(filter._1)) {
-            filterMap(filter._1) += filter._2
-          } else {
-            filterMap += filter._1 ->  ListBuffer(filter._2)
-          }
+        filters.groupBy(filter => filter._1).foreach { case (k, v) =>
+          filterMap += k -> createOfferFilter(v)
         }
-        filterMap.foreach { case (k, v) =>
-          returnFilter += createOfferFilter(k, v)
-        }
-        returnFilter.toList
+        filterMap
       }
-      case Failure(f) => List[OfferFilter]()
+      case Failure(f) => Map[String, List[Map[String, String]]]()
     }
   }
-
 
   private def getFiltersSQL(getId: Int)(implicit ec: ExecutionContext): Try[Vector[(String, String)]] = {
     val offerid = getId.toString
@@ -104,24 +94,16 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
 
   }
 
-  private def getRequiredInfo (getId: Int)(implicit ec: ExecutionContext): List[OfferFilter] = {
-    var returnFilter = ListBuffer[OfferFilter]()
-    var filterMap: Map[String, ListBuffer[String]] = Map[String, ListBuffer[String]]()
+  private def getRequiredInfo (getId: Int)(implicit ec: ExecutionContext): Map[String, List[Map[String, String]]] = {
+    var filterMap: Map[String, List[Map[String, String]]] = Map[String, List[Map[String, String]]]()
     getRequiredInfoSQL(getId) match {
       case Success(filters) => {
-        filters.foreach { filter =>
-          if (filterMap.contains(filter._1)) {
-            filterMap(filter._1) += filter._2
-          } else {
-            filterMap += filter._1 ->  ListBuffer(filter._2)
-          }
+        filters.groupBy(filter => filter._1).foreach { case (k, v) =>
+          filterMap += k -> createOfferFilter(v)
         }
-        filterMap.foreach { case (k, v) =>
-          returnFilter += createOfferFilter(k, v)
-        }
-        returnFilter.toList
+        filterMap
       }
-      case Failure(f) => List[OfferFilter]()
+      case Failure(f) => Map[String, List[Map[String, String]]]()
     }
   }
 
@@ -143,13 +125,14 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
   }
 
 
-  private def createOfferFilter(category: String, filters: ListBuffer[String]) : OfferFilter = {
-    var filterList = ListBuffer[OfferCriterionDescriptor]()
+  private def createOfferFilter(filters: Vector[(String, String)]) : List[Map[String, String]] = {
+    var filterList = ListBuffer[Map[String, String]]()
     filters.foreach { filter =>
-      filterList += OfferCriterionDescriptor(filter, true) //TODO: get from taylor
+      filterList += Map("informationType" -> filter._2,  "informationMissing" -> "true") //TODO: get from taylor, also JSON thing can't do any, so using string for the bool for now
     }
-    OfferFilter(category, filterList.toList)
+    filterList.toList
   }
+
 
   private def getTypes (getId: Int)(implicit ec: ExecutionContext): List[String] = {
     geTypesSQL(getId) match {
@@ -164,7 +147,6 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
   //TODO: need to return the categories that are not basic info, and check them in cassandra
   private def geTypesSQL(getId: Int)(implicit ec: ExecutionContext): Try[Vector[(String)]] = {
     val offerid = getId.toString
-    val userID = 5 //TODO: get userID
     val action = sql"""SELECT offertypes.offertype
                         FROM offercategories
                         INNER JOIN offertypes

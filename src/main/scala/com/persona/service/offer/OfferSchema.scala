@@ -3,8 +3,8 @@ package com.persona.service.offer
 
 class OfferSchema private (val offerInfo: OfferBasicInfo,
                            val offerType: List[String],
-                           val offerFilters: List[OfferFilter],
-                           val offerInfoRequired: List[OfferFilter],
+                           val offerFilters: Map[String, List[Map[String, String]]],
+                           val offerInfoRequired: Map[String, List[Map[String, String]]],
                            val isEligible: Boolean,
                            val isParticipating: Boolean) {
 
@@ -17,7 +17,7 @@ class OfferSchema private (val offerInfo: OfferBasicInfo,
 
 object OfferSchema {
 
-  def apply(offerInfo: OfferBasicInfo, offerType: List[String], offerFilters: List[OfferFilter], isEligible: Boolean, offerInfoRequired: List[OfferFilter], isParticipating: Boolean) : OfferSchema = {
+  def apply(offerInfo: OfferBasicInfo, offerType: List[String], offerFilters: Map[String, List[Map[String, String]]], isEligible: Boolean, offerInfoRequired: Map[String, List[Map[String, String]]], isParticipating: Boolean) : OfferSchema = {
     new OfferSchema(offerInfo, offerType, offerFilters, offerInfoRequired, isEligible, isParticipating)
   }
 
