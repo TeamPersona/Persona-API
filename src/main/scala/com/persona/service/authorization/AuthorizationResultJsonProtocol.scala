@@ -60,7 +60,7 @@ trait AuthorizationResultJsonProtocol {
       val expirationTime = readExpirationTime(authorizationResultAsJsObject)
       val tokenType = readTokenType(authorizationResultAsJsObject)
 
-      AuthorizationResult(accessToken, refreshToken, expirationTime, tokenType)
+      AuthorizationResult(accessToken, expirationTime, refreshToken, tokenType)
     }
 
     def write(authorizationResult: AuthorizationResult): JsValue = {

@@ -1,12 +1,12 @@
 package com.persona
 
-import java.security.SecureRandom
+import java.security.interfaces.{ECPrivateKey, ECPublicKey}
+import java.security.{KeyPairGenerator, SecureRandom}
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
-
 import com.persona.http.account.AccountApi
 import com.persona.http.authentication.AuthenticationApi
 import com.persona.http.authorization.AuthorizationApi
@@ -14,20 +14,23 @@ import com.persona.http.bank.BankApi
 import com.persona.http.chat.ChatApi
 import com.persona.http.offer.OfferApi
 import com.persona.service.account.google.{GoogleAccountService, GoogleTokenConverter, SlickGoogleAccountDAO}
-import com.persona.service.account.thirdparty.SlickThirdPartyAccountDAO
 import com.persona.service.account.{AccountService, AccountValidator, SlickAccountDAO}
 import com.persona.service.authentication.AuthenticationService
 import com.persona.service.authentication.google.{GoogleAuthenticationService, GoogleTokenValidationService}
-import com.persona.service.authorization.{SlickRefreshTokenDAO, OAuthTokenGenerator, AuthorizationService}
+import com.persona.service.authorization.{AuthorizationService, JWTAccessTokenGenerator, OAuthTokenGenerator, SlickRefreshTokenDAO}
 import com.persona.service.bank.{BankService, CassandraBankDAO, DataItemValidator, JsonDataSchemaLoader}
 import com.persona.service.chat.ChatService
 import com.persona.service.offer.{CassandraOfferDAO, OfferService}
-
 import com.typesafe.config.Config
-
 import slick.jdbc.JdbcBackend._
 
 import scala.concurrent.ExecutionContext
+
+object Bootstrap {
+
+  private val ECKeySize = 256
+
+}
 
 class Bootstrap
   (config: Config, http: HttpExt)
@@ -38,13 +41,23 @@ class Bootstrap
 
   private[this] val db = Database.forConfig("db", personaConfig)
 
-  private[this] val secureRandom = new SecureRandom
+  private[this] val secureRandom = SecureRandom.getInstanceStrong
 
   private[this] val googleTokenValidationService = GoogleTokenValidationService(googleClientId, http)
-  
+
+  private[this] val keyGenerator = KeyPairGenerator.getInstance("EC")
+  keyGenerator.initialize(Bootstrap.ECKeySize, secureRandom)
+
+  private[this] val keyPair = keyGenerator.generateKeyPair()
+
+  private[this] val publicKey = keyPair.getPublic.asInstanceOf[ECPublicKey]
+  private[this] val privateKey = keyPair.getPrivate.asInstanceOf[ECPrivateKey]
+  private[this] val issuer = personaConfig.getString("jwt_issuer")
+  private[this] val accessTokenGenerator = new JWTAccessTokenGenerator(publicKey, privateKey, issuer)
+  private[this] val accessTokenExpirationTime = personaConfig.getInt("oauth_expiration_time")
   private[this] val oauthTokenGenerator = new OAuthTokenGenerator(secureRandom)
   private[this] val refreshTokenDAO = new SlickRefreshTokenDAO(db)
-  private[this] val authorizationService = AuthorizationService(oauthTokenGenerator, refreshTokenDAO)
+  private[this] val authorizationService = AuthorizationService(accessTokenGenerator, accessTokenExpirationTime, oauthTokenGenerator, refreshTokenDAO)
   private[this] val authorizationApi = new AuthorizationApi(authorizationService)
 
   private[this] val accountValidator = new AccountValidator

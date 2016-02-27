@@ -18,3 +18,17 @@ CREATE TABLE google_accounts
     id SERIAL PRIMARY KEY REFERENCES accounts,
     google_id TEXT UNIQUE
 );
+
+CREATE TABLE third_party_accounts
+(
+    id TEXT PRIMARY KEY,
+    creation_time TIMESTAMP
+);
+
+CREATE TABLE refresh_tokens
+(
+    token TEXT PRIMARY KEY,
+    account_id INT REFERENCES accounts,
+    third_party_account_id TEXT REFERENCES third_party_accounts,
+    valid BOOLEAN
+);
