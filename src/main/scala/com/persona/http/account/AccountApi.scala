@@ -34,7 +34,7 @@ class AccountApi
             accountValidator.validate(accountDescriptor).fold({ errors =>
               complete(StatusCodes.BadRequest, errorJson(errors))
             }, { _ =>
-              formFields('password) { password =>
+              formField('password) { password =>
                 onComplete(accountService.create(accountDescriptor, password)) {
                   case Success(validationResult) =>
                     if(validationResult.isSuccess) {

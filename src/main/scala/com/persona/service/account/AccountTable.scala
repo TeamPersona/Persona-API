@@ -40,7 +40,7 @@ trait CreatableAccountUtils {
 
 }
 
-private class AccountTable(tag: Tag) extends Table[CreatableAccount](tag, "accounts") {
+class AccountTable(tag: Tag) extends Table[CreatableAccount](tag, "accounts") {
 
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def givenName = column[String]("given_name")

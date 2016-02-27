@@ -14,11 +14,11 @@ import com.persona.http.bank.BankApi
 import com.persona.http.chat.ChatApi
 import com.persona.http.offer.OfferApi
 import com.persona.service.account.google.{GoogleAccountService, GoogleTokenConverter, SlickGoogleAccountDAO}
-import com.persona.service.account.thirdparty.SlickThirdPartAccountDAO
+import com.persona.service.account.thirdparty.SlickThirdPartyAccountDAO
 import com.persona.service.account.{AccountService, AccountValidator, SlickAccountDAO}
 import com.persona.service.authentication.AuthenticationService
 import com.persona.service.authentication.google.{GoogleAuthenticationService, GoogleTokenValidationService}
-import com.persona.service.authorization.AuthorizationService
+import com.persona.service.authorization.{SlickRefreshTokenDAO, OAuthTokenGenerator, AuthorizationService}
 import com.persona.service.bank.{BankService, CassandraBankDAO, DataItemValidator, JsonDataSchemaLoader}
 import com.persona.service.chat.ChatService
 import com.persona.service.offer.{CassandraOfferDAO, OfferService}
@@ -41,10 +41,11 @@ class Bootstrap
   private[this] val secureRandom = new SecureRandom
 
   private[this] val googleTokenValidationService = GoogleTokenValidationService(googleClientId, http)
-
-  private[this] val thirdPartyAccountDAO = new SlickThirdPartAccountDAO(db, secureRandom)
-  private[this] val authorizationService = new AuthorizationService
-  private[this] val authorizationApi = new AuthorizationApi(thirdPartyAccountDAO, authorizationService)
+  
+  private[this] val oauthTokenGenerator = new OAuthTokenGenerator(secureRandom)
+  private[this] val refreshTokenDAO = new SlickRefreshTokenDAO(db)
+  private[this] val authorizationService = AuthorizationService(oauthTokenGenerator, refreshTokenDAO)
+  private[this] val authorizationApi = new AuthorizationApi(authorizationService)
 
   private[this] val accountValidator = new AccountValidator
   private[this] val passwordLogRounds = personaConfig.getInt("passwordLogRounds")
