@@ -11,12 +11,17 @@ class SlickGoogleAccountDAO(db: Database) extends GoogleAccountDAO with Creatabl
   private[this] val accounts = TableQuery[AccountTable]
   private[this] val googleAccounts = TableQuery[GoogleAccountTable]
 
-  def exists(googleId: String)(implicit ec: ExecutionContext): Future[Boolean] = {
-    val query = googleAccounts.filter { googleAccount =>
-      googleAccount.googleId === googleId
-    }
+  def retrieve(googleId: String)(implicit ec: ExecutionContext): Future[Option[Account]] = {
+    val query = googleAccounts.join(accounts).on(_.id === _.id)
+                              .filter(table => table._1.googleId === googleId)
 
-    db.run(query.exists.result)
+    db.run(query.result.headOption).map { resultOption =>
+      resultOption.map { result =>
+        val (_, account) = result
+
+        toAccount(account)
+      }
+    }
   }
 
   def exists(googleAccountDescriptor: GoogleAccountDescriptor)(implicit ec: ExecutionContext): Future[Boolean] = {

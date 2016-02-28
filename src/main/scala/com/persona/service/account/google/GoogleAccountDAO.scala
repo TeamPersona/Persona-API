@@ -6,7 +6,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait GoogleAccountDAO {
 
-  def exists(googleId: String)(implicit ec: ExecutionContext): Future[Boolean]
+  def retrieve(googleId: String)(implicit ec: ExecutionContext): Future[Option[Account]]
 
   def exists(googleAccountDescriptor: GoogleAccountDescriptor)(implicit ec: ExecutionContext): Future[Boolean]
 
