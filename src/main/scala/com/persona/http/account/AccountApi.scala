@@ -8,13 +8,11 @@ import com.nimbusds.jwt.SignedJWT
 
 import com.persona.http.JsonPersonaError
 import com.persona.service.account.google.GoogleAccountService
-import com.persona.service.account.{AccountValidator, AccountDescriptor, AccountService}
+import com.persona.service.account.{AccountDescriptor, AccountService, AccountValidator}
 import com.persona.service.authorization.{AuthorizationResultJsonProtocol, AuthorizationService}
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Try, Failure, Success}
-
-import spray.json._
+import scala.util.{Failure, Success, Try}
 
 class AccountApi
   (
@@ -74,21 +72,34 @@ class AccountApi
       path("google") {
         pathEndOrSingleSlash {
           post {
-            formField("id_token") { jwt =>
+            formFields('id_token, 'phone_number, 'client_id) { (jwt, phoneNumber, clientId) =>
               Try(SignedJWT.parse(jwt)) match {
                 case Success(idToken) =>
-                  formField('phone_number) { phoneNumber =>
-                    onComplete(googleAccountService.create(idToken, phoneNumber)) {
-                      case Success(creationResult) =>
-                        creationResult.fold({ errors =>
-                          complete(StatusCodes.BadRequest, errorJson(errors))
-                        }, { _ =>
-                          complete("""{ "code": "abcdefghikl" }""".parseJson)
-                        })
+                  onComplete(accountService.retrieveThirdPartyAccount(clientId)) {
+                    case Success(thirdPartyAccountOption) =>
+                      thirdPartyAccountOption.map { thirdPartyAccount =>
+                        onComplete(googleAccountService.create(idToken, phoneNumber)) {
+                          case Success(creationResult) =>
+                            creationResult.fold({ errors =>
+                              complete(StatusCodes.BadRequest, errorJson(errors))
+                            }, { account =>
+                              onComplete(authorizationService.authorize(account, thirdPartyAccount)) {
+                                case Success(result) =>
+                                  complete(result)
 
-                      case Failure(e) =>
-                        complete(StatusCodes.InternalServerError)
-                    }
+                                case Failure(e) =>
+                                  complete(StatusCodes.InternalServerError)
+                              }
+                            })
+
+                          case Failure(e) =>
+                            complete(StatusCodes.InternalServerError)
+                        }
+                      } getOrElse {
+                        complete(StatusCodes.BadRequest)
+                      }
+                    case Failure(e) =>
+                      complete(StatusCodes.InternalServerError)
                   }
 
                 case Failure(e) =>

@@ -1,6 +1,6 @@
 package com.persona.service.account.google
 
-import com.persona.service.account.{CreatableAccountUtils, AccountTable, AccountDescriptor}
+import com.persona.service.account.{Account, CreatableAccountUtils, AccountTable, AccountDescriptor}
 
 import scala.concurrent.{Future, ExecutionContext}
 
@@ -33,13 +33,15 @@ class SlickGoogleAccountDAO(db: Database) extends GoogleAccountDAO with Creatabl
     db.run(query.exists.result)
   }
 
-  def create(googleAccountDescriptor: GoogleAccountDescriptor)(implicit ec: ExecutionContext): Future[Unit] = {
+  def create(googleAccountDescriptor: GoogleAccountDescriptor)(implicit ec: ExecutionContext): Future[Account] = {
     val query = for {
       userId <- (accounts returning accounts.map(_.id)) += toCreatableAccount(googleAccountDescriptor.accountDescriptor)
       _ <- googleAccounts += GoogleAccount(userId, googleAccountDescriptor.googleId)
-    } yield()
+    } yield userId
 
-    db.run(query.transactionally).map(_ => ())
+    db.run(query.transactionally).map { userId =>
+      toAccount(userId, googleAccountDescriptor.accountDescriptor)
+    }
   }
 
 }
