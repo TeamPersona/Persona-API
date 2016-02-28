@@ -36,7 +36,7 @@ class JWTAccessTokenGenerator(
     jwt.serialize
   }
 
-  def verify(accessToken: String, thirdPartyAccountId: String): Option[String] = {
+  def verify(accessToken: String): Option[(Int, String)] = {
     Try(SignedJWT.parse(accessToken)) match {
       case Success(jwt) =>
         Try(jwt.verify(verifier)) match {
@@ -44,12 +44,17 @@ class JWTAccessTokenGenerator(
             if(verified) {
               val claims = jwt.getJWTClaimsSet
               val audience = claims.getAudience.toList
-              val subject = claims.getSubject
 
-              if(1 == audience.size &&
-                 thirdPartyAccountId == audience.head &&
-                 Option(subject).isDefined) {
-                Some(subject)
+              if(1 == audience.size) {
+                Option(claims.getSubject).flatMap { accountIdString =>
+                  Try(accountIdString.toInt) match {
+                    case Success(accountId) =>
+                      Some((accountId, audience.head))
+
+                    case Failure(e) =>
+                      None
+                  }
+                }
               } else {
                 None
               }

@@ -27,7 +27,7 @@ class AuthenticationServiceActor(accountDAO: AccountDAO) extends Actor {
     case AuthenticationServiceActor.PasswordAuthenticate(email, password) =>
       val actor = sender
 
-      accountDAO.retrieve(email).onComplete {
+      accountDAO.retrieveByEmail(email).onComplete {
         case Success(resultOption) =>
           resultOption match {
             case Some(result) =>

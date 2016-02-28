@@ -4,7 +4,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait AccountDAO {
 
-  def retrieve(email: String)(implicit ec: ExecutionContext): Future[Option[(Account, String)]]
+  def retrieve(id: Int)(implicit ec: ExecutionContext): Future[Option[Account]]
+
+  def retrieveByEmail(email: String)(implicit ec: ExecutionContext): Future[Option[(Account, String)]]
 
   def exists(accountDescriptor: AccountDescriptor)(implicit ec: ExecutionContext): Future[Boolean]
 

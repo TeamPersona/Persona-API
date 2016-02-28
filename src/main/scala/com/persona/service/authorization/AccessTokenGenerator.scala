@@ -7,6 +7,6 @@ trait AccessTokenGenerator {
 
   def generate(account: Account, thirdPartyAccount: ThirdPartyAccount, expirationTime: Int): String
 
-  def verify(accessToken: String, thirdPartyAccountId: String): Option[String]
+  def verify(accessToken: String): Option[(Int, String)]
 
 }

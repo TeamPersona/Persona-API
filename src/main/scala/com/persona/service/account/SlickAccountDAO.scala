@@ -9,7 +9,19 @@ class SlickAccountDAO(db: Database) extends AccountDAO with CreatableAccountUtil
   private[this] val accounts = TableQuery[AccountTable]
   private[this] val passwords = TableQuery[PasswordTable]
 
-  def retrieve(email: String)(implicit ec: ExecutionContext): Future[Option[(Account, String)]] = {
+  def retrieve(id: Int)(implicit ec: ExecutionContext): Future[Option[Account]] = {
+    val query = accounts.filter { account =>
+      account.id === id
+    }
+
+    db.run(query.result.headOption).map { resultOption =>
+      resultOption.map { result =>
+        toAccount(result)
+      }
+    }
+  }
+
+  def retrieveByEmail(email: String)(implicit ec: ExecutionContext): Future[Option[(Account, String)]] = {
     val query = accounts.join(passwords).on(_.id === _.id)
                         .filter(table => table._1.emailAddress === email)
 

@@ -3,7 +3,7 @@ package com.persona.service.authorization
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
-import com.persona.service.account.Account
+import com.persona.service.account.{AccountService, Account}
 import com.persona.service.account.thirdparty.ThirdPartyAccount
 import com.persona.util.actor.ActorWrapper
 
@@ -14,6 +14,7 @@ import scala.util.{Failure, Success}
 object AuthorizationServiceActor {
 
   case class Authorize(account: Account, thirdPartyAccount: ThirdPartyAccount)
+  case class Validate(accessToken: String)
   case class GenerateAuthorizationCode(account: Account, thirdPartyAccount: ThirdPartyAccount)
   case class AuthorizationCodeGrant(authorizationCode: String, clientId: String)
   case class RefreshTokenGrant(refreshToken: String, clientId: String)
@@ -21,6 +22,7 @@ object AuthorizationServiceActor {
 }
 
 class AuthorizationServiceActor(
+  accountService: AccountService,
   accessTokenGenerator: AccessTokenGenerator,
   accessTokenExpirationTime: Int,
   tokenGenerator: OAuthTokenGenerator,
@@ -31,6 +33,9 @@ class AuthorizationServiceActor(
   def receive: Receive = {
     case AuthorizationServiceActor.Authorize(account, thirdPartyAccount) =>
       handleAuthorization(account, thirdPartyAccount, sender)
+
+    case AuthorizationServiceActor.Validate(accessToken) =>
+      handleValidation(accessToken, sender)
 
     case AuthorizationServiceActor.GenerateAuthorizationCode(account, thirdPartyAccount) =>
       // TODO - Differentiate authorization code and access token (For supporting third parties)
@@ -59,6 +64,37 @@ class AuthorizationServiceActor(
 
       case Failure(e) =>
         actor ! Status.Failure(e)
+    }
+  }
+
+  private[this] def handleValidation(accessToken: String, actor: ActorRef) = {
+    accessTokenGenerator.verify(accessToken) match {
+      case Some((accountId, thirdPartyAccountId)) =>
+        val futureAccountOption = accountService.retrieve(accountId)
+        val futureThirdPartyAccountOption = accountService.retrieveThirdPartyAccount(thirdPartyAccountId)
+
+        val futureResult = for {
+          accOption <- futureAccountOption
+          thirdPartyAccOption <- futureThirdPartyAccountOption
+        } yield {
+          accOption.flatMap { acc =>
+            thirdPartyAccOption.map { thirdPartyAcc =>
+              (acc, thirdPartyAcc)
+            }
+          }
+        }
+
+        futureResult.onComplete {
+          case Success(accountsOption) =>
+            actor ! accountsOption
+
+          case Failure(e) =>
+            actor ! Status.Failure(e)
+        }
+
+
+      case None =>
+        actor ! None
     }
   }
 
@@ -91,16 +127,24 @@ class AuthorizationServiceActor(
 object AuthorizationService {
 
   private val authorizeTimeout = Timeout(60.seconds)
+  private val validateTimeout = Timeout(60.seconds)
   private val generateAuthorizationCodeTimeout = Timeout(60.seconds)
   private val authorizationCodeGrantTimeout = Timeout(60.seconds)
   private val refreshTokenGrantTimeout = Timeout(60.seconds)
 
-  def apply(accessTokenGenerator: AccessTokenGenerator, accessTokenExpirationTime: Int,
+  def apply(accountService: AccountService,
+            accessTokenGenerator: AccessTokenGenerator, accessTokenExpirationTime: Int,
             oauthTokenGenerator: OAuthTokenGenerator, refreshTokenDAO: RefreshTokenDAO)
            (implicit actorSystem: ActorSystem): AuthorizationService = {
     val actor = actorSystem.actorOf(
       Props(
-        new AuthorizationServiceActor(accessTokenGenerator, accessTokenExpirationTime, oauthTokenGenerator, refreshTokenDAO)
+        new AuthorizationServiceActor(
+          accountService,
+          accessTokenGenerator,
+          accessTokenExpirationTime,
+          oauthTokenGenerator,
+          refreshTokenDAO
+        )
       )
     )
 
@@ -117,6 +161,15 @@ class AuthorizationService private(actor: ActorRef) extends ActorWrapper(actor) 
 
     futureResult.map { result =>
       result.asInstanceOf[AuthorizationResult]
+    }
+  }
+
+  def validate(accessToken: String)(implicit ec: ExecutionContext): Future[Option[(Account, ThirdPartyAccount)]] = {
+    implicit val timeout = AuthorizationService.validateTimeout
+    val futureResult = actor ? AuthorizationServiceActor.Validate(accessToken)
+
+    futureResult.map { result =>
+      result.asInstanceOf[Option[(Account, ThirdPartyAccount)]]
     }
   }
 
