@@ -4,7 +4,7 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 
-import com.persona.service.account.AccountDAO
+import com.persona.service.account.{Account, AccountDAO}
 import com.persona.util.actor.ActorWrapper
 
 import org.mindrot.jbcrypt.BCrypt
@@ -27,14 +27,20 @@ class AuthenticationServiceActor(accountDAO: AccountDAO) extends Actor {
     case AuthenticationServiceActor.PasswordAuthenticate(email, password) =>
       val actor = sender
 
-      accountDAO.retrievePassword(email).onComplete {
-        case Success(expectedPasswordOption) =>
-          expectedPasswordOption match {
-            case Some(expectedPassword) =>
-              actor ! BCrypt.checkpw(password, expectedPassword)
+      accountDAO.retrieveByEmail(email).onComplete {
+        case Success(resultOption) =>
+          resultOption match {
+            case Some(result) =>
+              val (account, expectedPassword) = result
+
+              if(BCrypt.checkpw(password, expectedPassword)) {
+                actor ! Some(account)
+              } else {
+                actor ! None
+              }
 
             case None =>
-              actor ! false
+              actor ! None
           }
 
         case Failure(e) =>
@@ -62,12 +68,12 @@ object AuthenticationService {
 
 class AuthenticationService private(actor: ActorRef) extends ActorWrapper(actor) {
 
-  def authenticate(email: String, password: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+  def authenticate(email: String, password: String)(implicit ec: ExecutionContext): Future[Option[Account]] = {
     implicit val timeout = AuthenticationService.authenticateTimeout
     val futureResult = actor ? AuthenticationServiceActor.PasswordAuthenticate(email, password)
 
     futureResult.map { result =>
-      result.asInstanceOf[Boolean]
+      result.asInstanceOf[Option[Account]]
     }
   }
 

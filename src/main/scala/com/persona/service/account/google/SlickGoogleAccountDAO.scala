@@ -1,6 +1,6 @@
 package com.persona.service.account.google
 
-import com.persona.service.account.{CreatableAccountUtils, AccountTable, AccountDescriptor}
+import com.persona.service.account.{Account, CreatableAccountUtils, AccountTable, AccountDescriptor}
 
 import scala.concurrent.{Future, ExecutionContext}
 
@@ -11,12 +11,17 @@ class SlickGoogleAccountDAO(db: Database) extends GoogleAccountDAO with Creatabl
   private[this] val accounts = TableQuery[AccountTable]
   private[this] val googleAccounts = TableQuery[GoogleAccountTable]
 
-  def exists(googleId: String)(implicit ec: ExecutionContext): Future[Boolean] = {
-    val query = googleAccounts.filter { googleAccount =>
-      googleAccount.googleId === googleId
-    }
+  def retrieve(googleId: String)(implicit ec: ExecutionContext): Future[Option[Account]] = {
+    val query = googleAccounts.join(accounts).on(_.id === _.id)
+                              .filter(table => table._1.googleId === googleId)
 
-    db.run(query.exists.result)
+    db.run(query.result.headOption).map { resultOption =>
+      resultOption.map { result =>
+        val (_, account) = result
+
+        toAccount(account)
+      }
+    }
   }
 
   def exists(googleAccountDescriptor: GoogleAccountDescriptor)(implicit ec: ExecutionContext): Future[Boolean] = {
@@ -33,13 +38,15 @@ class SlickGoogleAccountDAO(db: Database) extends GoogleAccountDAO with Creatabl
     db.run(query.exists.result)
   }
 
-  def create(googleAccountDescriptor: GoogleAccountDescriptor)(implicit ec: ExecutionContext): Future[Unit] = {
+  def create(googleAccountDescriptor: GoogleAccountDescriptor)(implicit ec: ExecutionContext): Future[Account] = {
     val query = for {
       userId <- (accounts returning accounts.map(_.id)) += toCreatableAccount(googleAccountDescriptor.accountDescriptor)
       _ <- googleAccounts += GoogleAccount(userId, googleAccountDescriptor.googleId)
-    } yield()
+    } yield userId
 
-    db.run(query.transactionally).map(_ => ())
+    db.run(query.transactionally).map { userId =>
+      toAccount(userId, googleAccountDescriptor.accountDescriptor)
+    }
   }
 
 }

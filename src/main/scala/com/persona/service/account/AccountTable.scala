@@ -38,9 +38,19 @@ trait CreatableAccountUtils {
     }
   }
 
+  def toAccount(id: Int, accountDescriptor: AccountDescriptor): Account = {
+    Account(
+      id,
+      accountDescriptor.givenName,
+      accountDescriptor.familyName,
+      accountDescriptor.emailAddress,
+      accountDescriptor.phoneNumber
+    )
+  }
+
 }
 
-private class AccountTable(tag: Tag) extends Table[CreatableAccount](tag, "accounts") {
+class AccountTable(tag: Tag) extends Table[CreatableAccount](tag, "accounts") {
 
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def givenName = column[String]("given_name")
