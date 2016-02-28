@@ -34,13 +34,15 @@ class SlickAccountDAO(db: Database) extends AccountDAO with CreatableAccountUtil
     db.run(query.exists.result)
   }
 
-  def create(accountDescriptor: AccountDescriptor, hashedPassword: String)(implicit ec: ExecutionContext): Future[Unit] = {
+  def create(accountDescriptor: AccountDescriptor, hashedPassword: String)(implicit ec: ExecutionContext): Future[Account] = {
     val query = (for {
       userId <- (accounts returning accounts.map(_.id)) += toCreatableAccount(accountDescriptor)
       _ <- passwords += VerifiableAccount(userId, hashedPassword)
-    } yield()).transactionally
+    } yield userId).transactionally
 
-    db.run(query).map(_ => ())
+    db.run(query).map { userId =>
+      toAccount(userId, accountDescriptor)
+    }
   }
 
 }

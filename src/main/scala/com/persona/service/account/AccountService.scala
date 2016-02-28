@@ -1,8 +1,10 @@
 package com.persona.service.account
 
 import akka.actor._
-import akka.pattern.ask
+import akka.pattern.{ask, pipe}
 import akka.util.Timeout
+import com.persona.service.account.AccountServiceActor.RetrieveThirdParty
+import com.persona.service.account.thirdparty.{ThirdPartyAccount, ThirdPartyAccountDAO}
 import com.persona.util.actor.ActorWrapper
 import org.mindrot.jbcrypt.BCrypt
 
@@ -16,33 +18,47 @@ import scalaz.ValidationNel
 object AccountServiceActor {
 
   case class Create(accountDescriptor: AccountDescriptor, password: String)
+  case class RetrieveThirdParty(id: String)
 
 }
 
-class AccountServiceActor(accountDAO: AccountDAO, passwordLogRounds: Int) extends Actor {
+class AccountServiceActor(
+  accountDAO: AccountDAO,
+  thirdPartyAccountDAO: ThirdPartyAccountDAO,
+  passwordLogRounds: Int)
+  extends Actor {
 
   private[this] implicit val executionContext = context.dispatcher
 
   def receive: Receive = {
     case AccountServiceActor.Create(accountDescriptor, password) =>
-      val actor = sender
+      handleCreate(accountDescriptor, password, sender)
 
-      accountDAO.exists(accountDescriptor).onComplete {
-        case Success(exists) =>
-          if(exists) {
-            actor ! (new AccountAlreadyExistsError).failureNel
-          } else {
-            val salt = BCrypt.gensalt(passwordLogRounds)
-            val hashedPassword = BCrypt.hashpw(password, salt)
+    case RetrieveThirdParty(id: String) =>
+      handleRetrieveThirdParty(id, sender)
+  }
 
-            accountDAO.create(accountDescriptor, hashedPassword).onComplete {
-              case Success(result) => actor ! result.successNel
-              case Failure(e) => actor ! Status.Failure(e)
-            }
+  private[this] def handleCreate(accountDescriptor: AccountDescriptor, password: String, actor: ActorRef) = {
+    accountDAO.exists(accountDescriptor).onComplete {
+      case Success(exists) =>
+        if(exists) {
+          actor ! (new AccountAlreadyExistsError).failureNel
+        } else {
+          val salt = BCrypt.gensalt(passwordLogRounds)
+          val hashedPassword = BCrypt.hashpw(password, salt)
+
+          accountDAO.create(accountDescriptor, hashedPassword).onComplete {
+            case Success(result) => actor ! result.successNel
+            case Failure(e) => actor ! Status.Failure(e)
           }
+        }
 
-        case Failure(e) => actor ! Status.Failure(e)
-      }
+      case Failure(e) => actor ! Status.Failure(e)
+    }
+  }
+
+  private[this] def handleRetrieveThirdParty(id: String, actor: ActorRef) = {
+    thirdPartyAccountDAO.retrieve(id).pipeTo(actor)
   }
 
 }
@@ -50,11 +66,13 @@ class AccountServiceActor(accountDAO: AccountDAO, passwordLogRounds: Int) extend
 object AccountService {
 
   private val createTimeout = Timeout(60.seconds)
+  private val retrieveTimeout = Timeout(60.seconds)
 
-  def apply(accountDAO: AccountDAO, passwordLogRounds: Int)(implicit actorSystem: ActorSystem): AccountService = {
+  def apply(accountDAO: AccountDAO, thirdPartyAccountDAO: ThirdPartyAccountDAO, passwordLogRounds: Int)
+           (implicit actorSystem: ActorSystem): AccountService = {
     val actor = actorSystem.actorOf(
       Props(
-        new AccountServiceActor(accountDAO, passwordLogRounds)
+        new AccountServiceActor(accountDAO, thirdPartyAccountDAO, passwordLogRounds)
       )
     )
 
@@ -66,12 +84,21 @@ object AccountService {
 class AccountService private(actor: ActorRef) extends ActorWrapper(actor) {
 
   def create(accountDescriptor: AccountDescriptor, password: String)
-            (implicit ec: ExecutionContext): Future[ValidationNel[AccountValidationError, Unit]] = {
+            (implicit ec: ExecutionContext): Future[ValidationNel[AccountValidationError, Account]] = {
     implicit val timeout = AccountService.createTimeout
     val futureResult = actor ? AccountServiceActor.Create(accountDescriptor, password)
 
     futureResult.map { result =>
-      result.asInstanceOf[ValidationNel[AccountValidationError, Unit]]
+      result.asInstanceOf[ValidationNel[AccountValidationError, Account]]
+    }
+  }
+
+  def retrieveThirdPartyAccount(id: String)(implicit ec: ExecutionContext): Future[Option[ThirdPartyAccount]] = {
+    implicit val timeout = AccountService.retrieveTimeout
+    val futureResult = actor ? AccountServiceActor.RetrieveThirdParty(id)
+
+    futureResult.map { result =>
+      result.asInstanceOf[Option[ThirdPartyAccount]]
     }
   }
 

@@ -38,6 +38,16 @@ trait CreatableAccountUtils {
     }
   }
 
+  def toAccount(id: Int, accountDescriptor: AccountDescriptor): Account = {
+    Account(
+      id,
+      accountDescriptor.givenName,
+      accountDescriptor.familyName,
+      accountDescriptor.emailAddress,
+      accountDescriptor.phoneNumber
+    )
+  }
+
 }
 
 class AccountTable(tag: Tag) extends Table[CreatableAccount](tag, "accounts") {

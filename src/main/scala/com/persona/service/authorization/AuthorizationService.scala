@@ -38,14 +38,14 @@ class AuthorizationServiceActor(
     case AuthorizationServiceActor.AuthorizationCodeGrant(authorizationCode, clientId) =>
       // TODO - Generate access token and refresh token (For supporting third parties)
 
-    case AuthorizationServiceActor.RefreshTokenGrant(refreshToken, clientId) =>
-      handleRefreshTokenGrant(refreshToken, clientId, sender)
+    case AuthorizationServiceActor.RefreshTokenGrant(refreshToken, thirdPartyAccount) =>
+      handleRefreshTokenGrant(refreshToken, thirdPartyAccount, sender)
   }
 
   private[this] def generateAccessToken(account: Account, thirdPartyAccount: ThirdPartyAccount) = {
     // Generator expects expiration time in millis
     // OAuth expects expiration time in seconds
-    accessTokenGenerator.generate(account, thirdPartyAccount, accessTokenExpirationTime)
+    accessTokenGenerator.generate(account, thirdPartyAccount, accessTokenExpirationTime * 1000)
   }
 
   private[this] def handleAuthorization(account: Account, thirdPartyAccount: ThirdPartyAccount, actor: ActorRef) = {

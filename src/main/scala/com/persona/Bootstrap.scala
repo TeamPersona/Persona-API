@@ -14,6 +14,7 @@ import com.persona.http.bank.BankApi
 import com.persona.http.chat.ChatApi
 import com.persona.http.offer.OfferApi
 import com.persona.service.account.google.{GoogleAccountService, GoogleTokenConverter, SlickGoogleAccountDAO}
+import com.persona.service.account.thirdparty.SlickThirdPartyAccountDAO
 import com.persona.service.account.{AccountService, AccountValidator, SlickAccountDAO}
 import com.persona.service.authentication.AuthenticationService
 import com.persona.service.authentication.google.{GoogleAuthenticationService, GoogleTokenValidationService}
@@ -48,7 +49,7 @@ class Bootstrap
   private[this] val keyGenerator = KeyPairGenerator.getInstance("EC")
   keyGenerator.initialize(Bootstrap.ECKeySize, secureRandom)
 
-  private[this] val keyPair = keyGenerator.generateKeyPair()
+  private[this] val keyPair = keyGenerator.generateKeyPair
 
   private[this] val publicKey = keyPair.getPublic.asInstanceOf[ECPublicKey]
   private[this] val privateKey = keyPair.getPrivate.asInstanceOf[ECPrivateKey]
@@ -63,23 +64,24 @@ class Bootstrap
   private[this] val accountValidator = new AccountValidator
   private[this] val passwordLogRounds = personaConfig.getInt("passwordLogRounds")
   private[this] val accountDAO = new SlickAccountDAO(db)
-  private[this] val accountService = AccountService(accountDAO, passwordLogRounds)
+  private[this] val thirdPartyAccountDAO = new SlickThirdPartyAccountDAO(db, secureRandom)
+  private[this] val accountService = AccountService(accountDAO, thirdPartyAccountDAO, passwordLogRounds)
   private[this] val googleTokenConverter = new GoogleTokenConverter
   private[this] val googleAccountDAO = new SlickGoogleAccountDAO(db)
   private[this] val googleAccountService = GoogleAccountService(googleTokenConverter, googleAccountDAO, googleTokenValidationService)
-  private[this] val accountApi = new AccountApi(accountService, accountValidator, googleAccountService)
+  private[this] val accountApi = new AccountApi(accountService, accountValidator, googleAccountService, authorizationService)
 
   private[this] val authenticationService = AuthenticationService(accountDAO)
   private[this] val googleAuthenticationService = GoogleAuthenticationService(googleTokenConverter, googleAccountDAO, googleTokenValidationService)
   private[this] val authenticationApi = new AuthenticationApi(authenticationService, googleAuthenticationService)
 
-  private[this] val bankDAO = new CassandraBankDAO()
+  private[this] val bankDAO = new CassandraBankDAO
   private[this] val dataSchemaLoader = new JsonDataSchemaLoader(personaConfig.getString("schemaDirectory"))
   private[this] val dataItemValidator = new DataItemValidator(dataSchemaLoader)
   private[this] val bankService = BankService(bankDAO, dataItemValidator)
   private[this] val bankApi = new BankApi(bankService)
 
-  private[this] val offerDAO = new CassandraOfferDAO()
+  private[this] val offerDAO = new CassandraOfferDAO
   private[this] val offerService = OfferService(offerDAO)
   private[this] val offerApi = new OfferApi(offerService)
 
