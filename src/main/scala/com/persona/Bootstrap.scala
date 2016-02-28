@@ -97,7 +97,7 @@ class Bootstrap
   private[this] val accountApi = new AccountApi(accountService, accountValidator, googleAccountService, authorizationService)
   private[this] val authenticationApi = new AuthenticationApi(authenticationService, googleAuthenticationService, accountService, authorizationService)
   private[this] val authorizationApi = new AuthorizationApi(authorizationService)
-  private[this] val bankApi = new BankApi(bankService)
+  private[this] val bankApi = new BankApi(bankService, authorizationService)
   private[this] val offerApi = new OfferApi(offerService)
   private[this] val chatApi = new ChatApi(chatService)
 

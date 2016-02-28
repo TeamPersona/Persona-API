@@ -42,22 +42,7 @@ class JWTAccessTokenGenerator(
         Try(jwt.verify(verifier)) match {
           case Success(verified) =>
             if(verified) {
-              val claims = jwt.getJWTClaimsSet
-              val audience = claims.getAudience.toList
-
-              if(1 == audience.size) {
-                Option(claims.getSubject).flatMap { accountIdString =>
-                  Try(accountIdString.toInt) match {
-                    case Success(accountId) =>
-                      Some((accountId, audience.head))
-
-                    case Failure(e) =>
-                      None
-                  }
-                }
-              } else {
-                None
-              }
+              validateJWT(jwt)
             } else {
               None
             }
@@ -68,6 +53,52 @@ class JWTAccessTokenGenerator(
 
       case Failure(e) =>
         None
+    }
+  }
+
+  private[this] def validateJWT(jwt: SignedJWT) = {
+    Try(jwt.getJWTClaimsSet) match {
+      case Success(claims) =>
+        validateClaims(claims)
+
+      case Failure(e) =>
+        None
+    }
+  }
+
+  private[this] def validateClaims(claims: JWTClaimsSet) = {
+    Option(claims.getIssuer).flatMap { jwtIssuer =>
+      if(jwtIssuer == issuer) {
+        Option(claims.getExpirationTime).flatMap { expirationTime =>
+          val jwtExpirationTime = new DateTime(expirationTime)
+
+          if(jwtExpirationTime.isAfter(DateTime.now)) {
+            Option(claims.getAudience).flatMap { audience =>
+              val jwtAudience = audience.toList
+
+              if(1 == jwtAudience.size) {
+                val thirdPartyAccountId = jwtAudience.head
+
+                Option(claims.getSubject).flatMap { jwtSubject =>
+                  Try(jwtSubject.toInt) match {
+                    case Success(accountId) =>
+                      Some((accountId, thirdPartyAccountId))
+
+                    case Failure(e) =>
+                      None
+                  }
+                }
+              } else {
+                None
+              }
+            }
+          } else {
+            None
+          }
+        }
+      } else {
+        None
+      }
     }
   }
 

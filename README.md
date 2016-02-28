@@ -28,7 +28,9 @@ Setting Up
 1. brew install postgresql
 2. postgres -D /usr/local/var/postgres
 3. createdb persona
-4. psql -h localhost -d persona -a -f scripts/postgresSchemas.sql
+4. psql -h localhost -d persona -a -f scripts/postgresClean.sql
+5. psql -h localhost -d persona -a -f scripts/postgresSchemas.sql
+6. psql -h localhost -d persona -a -f scripts/postgresData.sql
 
 ### Cassandra
 1. scripts/startCassandra.sh
