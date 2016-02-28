@@ -1,11 +1,10 @@
 package com.persona.service.authorization
 
-import com.persona.service.account.{CreatableAccountUtils, CreatableAccount, AccountTable, Account}
-import com.persona.service.account.thirdparty.{ThirdPartyAccountTable, ThirdPartyAccount}
+import com.persona.service.account.thirdparty.{ThirdPartyAccount, ThirdPartyAccountTable}
+import com.persona.service.account.{Account, AccountTable, CreatableAccountUtils}
+import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.{ExecutionContext, Future}
-
-import slick.driver.PostgresDriver.api._
 
 sealed class UnknownValidateResult extends RuntimeException
 

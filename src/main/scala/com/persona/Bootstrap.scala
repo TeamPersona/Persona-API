@@ -73,7 +73,7 @@ class Bootstrap
 
   private[this] val authenticationService = AuthenticationService(accountDAO)
   private[this] val googleAuthenticationService = GoogleAuthenticationService(googleTokenConverter, googleAccountDAO, googleTokenValidationService)
-  private[this] val authenticationApi = new AuthenticationApi(authenticationService, googleAuthenticationService)
+  private[this] val authenticationApi = new AuthenticationApi(authenticationService, googleAuthenticationService, accountService, authorizationService)
 
   private[this] val bankDAO = new CassandraBankDAO
   private[this] val dataSchemaLoader = new JsonDataSchemaLoader(personaConfig.getString("schemaDirectory"))
