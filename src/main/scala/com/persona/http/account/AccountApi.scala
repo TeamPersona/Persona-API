@@ -6,9 +6,9 @@ import akka.http.scaladsl.server.Directives._
 
 import com.nimbusds.jwt.SignedJWT
 
-import com.persona.http.JsonPersonaError
+import com.persona.http.{PersonaOAuth2Utils, JsonPersonaError}
 import com.persona.service.account.google.GoogleAccountService
-import com.persona.service.account.{AccountDescriptor, AccountService, AccountValidator}
+import com.persona.service.account.{AccountJsonProtocol, AccountDescriptor, AccountService, AccountValidator}
 import com.persona.service.authorization.{AuthorizationResultJsonProtocol, AuthorizationService}
 
 import scala.concurrent.ExecutionContext
@@ -25,12 +25,28 @@ class AccountApi
     implicit ec: ExecutionContext
   )
   extends SprayJsonSupport
+    with AccountJsonProtocol
+    with AuthorizationResultJsonProtocol
     with JsonPersonaError
-    with AuthorizationResultJsonProtocol {
+    with PersonaOAuth2Utils {
 
   val route = {
     pathPrefix("account") {
       pathEndOrSingleSlash {
+        get {
+          oauth2Token { token =>
+            onComplete(authorizationService.validate(token)) {
+              case Success(Some((account, _))) =>
+                complete(account)
+
+              case Success(None) =>
+                complete(StatusCodes.BadRequest)
+
+              case Failure(e) =>
+                complete(StatusCodes.InternalServerError)
+            }
+          }
+        } ~
         post {
           formFields('given_name, 'family_name, 'email, 'phone_number).as(AccountDescriptor) { accountDescriptor =>
             accountValidator.validate(accountDescriptor).fold({ errors =>
