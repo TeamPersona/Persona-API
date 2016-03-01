@@ -1,6 +1,7 @@
 {
-    "category":"exampleCategory", 
-    "subcategory":"exampleSubcategory", 
+    "category": "exampleCategory",
+    "subcategory": "exampleSubcategory",
+    "rewardPoints": 50,
     "fields": [
         {
             "name":"exampleField", 
