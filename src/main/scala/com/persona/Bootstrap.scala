@@ -19,12 +19,7 @@ import com.persona.service.authentication.google.{GoogleAuthenticationService, G
 import com.persona.service.authorization.{AuthorizationService, JWTAccessTokenGenerator, OAuthTokenGenerator, SlickRefreshTokenDAO}
 import com.persona.service.bank._
 import com.persona.service.chat.ChatService
-<<<<<<< HEAD
 import com.persona.service.offer.{PostgresOfferDataDAO, OfferService}
-=======
-import com.persona.service.offer.{CassandraOfferDAO, OfferService}
-
->>>>>>> master
 import com.typesafe.config.Config
 
 import java.security.interfaces.{ECPrivateKey, ECPublicKey}
