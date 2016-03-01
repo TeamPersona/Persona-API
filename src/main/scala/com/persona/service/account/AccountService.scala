@@ -18,6 +18,7 @@ object AccountServiceActor {
   case class Create(accountDescriptor: AccountDescriptor, password: String)
   case class Retrieve(id: Int)
   case class RetrieveThirdParty(id: String)
+  case class AddRewardPoints(account: Account, points: Int)
 
 }
 
@@ -38,6 +39,9 @@ class AccountServiceActor(
 
     case AccountServiceActor.RetrieveThirdParty(id: String) =>
       handleRetrieveThirdParty(id, sender)
+
+    case AccountServiceActor.AddRewardPoints(account, points) =>
+      handleAddRewardPoints(account, points, sender)
   }
 
   private[this] def handleCreate(accountDescriptor: AccountDescriptor, password: String, actor: ActorRef) = {
@@ -67,12 +71,35 @@ class AccountServiceActor(
     thirdPartyAccountDAO.retrieve(id).pipeTo(actor)
   }
 
+  private[this] def handleAddRewardPoints(account: Account, points: Int, actor: ActorRef) = {
+    val updatedPoints = account.rewardPoints + points
+
+    accountDAO.updateRewardPoints(account, points).onComplete {
+      case Success(_) =>
+        val updatedAccount = Account(
+          account.id,
+          account.givenName,
+          account.familyName,
+          account.emailAddress,
+          account.phoneNumber,
+          updatedPoints,
+          account.balance
+        )
+
+        actor ! updatedAccount
+
+      case Failure(e) =>
+        actor ! Status.Failure(e)
+    }
+  }
+
 }
 
 object AccountService {
 
   private val createTimeout = Timeout(60.seconds)
   private val retrieveTimeout = Timeout(60.seconds)
+  private val updateTimeout = Timeout(60.seconds)
 
   def apply(accountDAO: AccountDAO, thirdPartyAccountDAO: ThirdPartyAccountDAO, passwordLogRounds: Int)
            (implicit actorSystem: ActorSystem): AccountService = {
@@ -114,6 +141,15 @@ class AccountService private(actor: ActorRef) extends ActorWrapper(actor) {
 
     futureResult.map { result =>
       result.asInstanceOf[Option[ThirdPartyAccount]]
+    }
+  }
+
+  def addRewardPoints(account: Account, points: Int)(implicit ec: ExecutionContext): Future[Account] = {
+    implicit val timeout = AccountService.updateTimeout
+    val futureResult = actor ? AccountServiceActor.AddRewardPoints(account, points)
+
+    futureResult.map { result =>
+      result.asInstanceOf[Account]
     }
   }
 
