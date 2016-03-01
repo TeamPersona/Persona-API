@@ -9,20 +9,29 @@ class SlickAccountDAO(db: Database) extends AccountDAO with CreatableAccountUtil
   private[this] val accounts = TableQuery[AccountTable]
   private[this] val passwords = TableQuery[PasswordTable]
 
-  def retrievePassword(email: String)(implicit ec: ExecutionContext): Future[Option[String]] = {
-    val join = for {
-      (account, password) <- accounts join passwords on (_.id === _.id)
-    } yield(account.emailAddress, password.password)
-
-    val where = join.filter { row =>
-      row._1 === email
+  def retrieve(id: Int)(implicit ec: ExecutionContext): Future[Option[Account]] = {
+    val query = accounts.filter { account =>
+      account.id === id
     }
 
-    val select = where.map { row =>
-      row._2
+    db.run(query.result.headOption).map { resultOption =>
+      resultOption.map { result =>
+        toAccount(result)
+      }
     }
+  }
 
-    db.run(select.result.headOption)
+  def retrieveByEmail(email: String)(implicit ec: ExecutionContext): Future[Option[(Account, String)]] = {
+    val query = accounts.join(passwords).on(_.id === _.id)
+                        .filter(table => table._1.emailAddress === email)
+
+    db.run(query.result.headOption).map { resultOption =>
+      resultOption.map { result =>
+        val (creatableAccount, verifiableAccount) = result
+
+        (toAccount(creatableAccount), verifiableAccount.password)
+      }
+    }
   }
 
   def exists(accountDescriptor: AccountDescriptor)(implicit ec: ExecutionContext): Future[Boolean] = {
@@ -34,13 +43,23 @@ class SlickAccountDAO(db: Database) extends AccountDAO with CreatableAccountUtil
     db.run(query.exists.result)
   }
 
-  def create(accountDescriptor: AccountDescriptor, hashedPassword: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    val query = (for {
+  def create(accountDescriptor: AccountDescriptor, hashedPassword: String)(implicit ec: ExecutionContext): Future[Account] = {
+    val query = for {
       userId <- (accounts returning accounts.map(_.id)) += toCreatableAccount(accountDescriptor)
       _ <- passwords += VerifiableAccount(userId, hashedPassword)
-    } yield()).transactionally
+    } yield userId
 
-    db.run(query).map(_ => ())
+    db.run(query.transactionally).map { userId =>
+      toAccount(userId, accountDescriptor)
+    }
+  }
+
+  def updateRewardPoints(account: Account, points: Int)(implicit ec: ExecutionContext): Future[Int] = {
+    val query = accounts.filter(acc => acc.id === account.id)
+                        .map(acc => acc.rewardPoints)
+                        .update(points)
+
+    db.run(query)
   }
 
 }

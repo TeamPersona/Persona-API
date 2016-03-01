@@ -1,10 +1,16 @@
 package com.persona.service.authentication.google
 
-sealed abstract class GoogleAuthenticationResult {
+import com.persona.service.account.Account
+
+sealed class AccountNotAvailableException extends RuntimeException
+
+sealed trait GoogleAuthenticationResult {
 
   def validToken: Boolean
 
   def validAccount: Boolean
+
+  def account: Account = throw new AccountNotAvailableException
 
 }
 
@@ -36,16 +42,18 @@ object ValidTokenInvalidAccountResult {
 
 }
 
-sealed class ValidTokenAndAccountResult extends GoogleAuthenticationResult {
+sealed class ValidTokenAndAccountResult(acc: Account) extends GoogleAuthenticationResult {
 
   def validToken: Boolean = true
 
   def validAccount: Boolean = true
 
+  override def account: Account = acc
+
 }
 
 object ValidTokenAndAccountResult {
 
-  def apply(): ValidTokenAndAccountResult = new ValidTokenAndAccountResult
+  def apply(acc: Account): ValidTokenAndAccountResult = new ValidTokenAndAccountResult(acc)
 
 }

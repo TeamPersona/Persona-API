@@ -40,34 +40,14 @@ sealed class MissingRequiredFieldError(field: FieldDescriptor) extends DataItemV
 
 sealed class InvalidDataException(message: String) extends RuntimeException(message)
 
-class DataItemValidator(dataSchemaLoader: DataSchemaLoader) {
-
-  private[this] val schemas = loadSchemas()
+class DataItemValidator(dataSchemaManager: DataSchemaManager) {
 
   def validate(item: DataItem): ValidationNel[DataItemValidationError, DataItem] = {
-    getSchema(item).map { schema =>
+    dataSchemaManager.schema(item.category, item.subcategory).map { schema =>
       schema.validate(item)
     } getOrElse {
       new InvalidCategoryError(item.category, item.subcategory).failureNel
     }
-  }
-
-  private[this] def getSchema(item: DataItem): Option[DataSchema] = {
-    val maybeCategoryMap = schemas.get(item.category)
-
-    maybeCategoryMap.flatMap { categoryMap =>
-      categoryMap.get(item.subcategory)
-    }
-  }
-
-  private[this] def loadSchemas(): Map[String, Map[String, DataSchema]] = {
-    val dataSchemas = dataSchemaLoader.load()
-
-    val groupedSchemas = dataSchemas.map { dataSchema =>
-      dataSchema.category -> Map(dataSchema.subcategory -> dataSchema)
-    }
-
-    groupedSchemas.toMap
   }
 
 }

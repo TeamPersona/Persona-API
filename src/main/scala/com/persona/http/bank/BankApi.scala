@@ -3,45 +3,77 @@ package com.persona.http.bank
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
-import com.persona.http.JsonPersonaError
-import com.persona.service.account.Account
+
+import com.persona.http.{JsonPersonaError, PersonaOAuth2Utils}
+import com.persona.service.authorization.AuthorizationService
 import com.persona.service.bank.{BankService, DataItemJsonProtocol, RawDataItem}
-import spray.json._
 
 import scala.concurrent.ExecutionContext
-import scala.util.Success
+import scala.util.{Failure, Success}
 
-class BankApi(bankService: BankService)(implicit ec: ExecutionContext)
+import spray.json._
+
+class BankApi
+  (
+    bankService: BankService,
+    authorizationService: AuthorizationService
+  )
+  (
+    implicit ec: ExecutionContext
+  )
   extends SprayJsonSupport
     with DataItemJsonProtocol
-    with JsonPersonaError {
+    with JsonPersonaError
+    with PersonaOAuth2Utils {
 
   val route = {
     pathPrefix("bank") {
       pathEndOrSingleSlash {
         post {
           entity(as[RawDataItem]) { rawDataItem =>
-            val dataItem = rawDataItem.process()
-            val testAccount = new Account(0, "john", "smith", "johnsmith@example.com", "123-456-7890")
+            oauth2Token { token =>
+              onComplete(authorizationService.validate(token)) {
+                case Success(Some((account, _))) =>
+                  val dataItem = rawDataItem.process()
 
-            onComplete(bankService.saveInformation(testAccount, dataItem)) {
-              case Success(result) =>
-                result.fold(parseErrors => {
-                  complete(StatusCodes.BadRequest, errorJson(parseErrors))
-                }, _ => {
-                  complete(StatusCodes.OK)
-                })
+                  onComplete(bankService.insert(account, dataItem)) {
+                    case Success(result) =>
+                      result.fold(parseErrors => {
+                        complete(StatusCodes.BadRequest, errorJson(parseErrors))
+                      }, _ => {
+                        complete(StatusCodes.OK)
+                      })
 
-              case _ => complete(StatusCodes.InternalServerError)
+                    case _ => complete(StatusCodes.InternalServerError)
+                  }
+
+                case Success(None) =>
+                  complete(StatusCodes.BadRequest)
+
+                case Failure(e) =>
+                  complete(StatusCodes.InternalServerError)
+              }
             }
           }
         } ~
         get {
-          val testAccount = new Account(0, "john", "smith", "johnsmith@example.com", "123-456-7890")
+          oauth2Token { token =>
+            onComplete(authorizationService.validate(token)) {
+              case Success(Some((account, _))) =>
+                onComplete(bankService.retrieve(account)) {
+                  case Success(dataItems) =>
+                    complete(dataItems.toJson)
 
-          onComplete(bankService.listInformation(testAccount)) {
-            case Success(dataItems) => complete(dataItems.toJson)
-            case _ => complete(StatusCodes.InternalServerError)
+                  case Failure(e) =>
+                    complete(StatusCodes.InternalServerError)
+                }
+
+              case Success(None) =>
+                complete(StatusCodes.BadRequest)
+
+              case Failure(e) =>
+                complete(StatusCodes.InternalServerError)
+            }
           }
         }
       }

@@ -5,6 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import com.nimbusds.jwt.JWT
+import com.persona.service.account.Account
 
 import com.persona.service.authentication.google.GoogleTokenValidationService
 import com.persona.util.actor.ActorWrapper
@@ -101,12 +102,12 @@ object GoogleAccountService {
 class GoogleAccountService private(actor: ActorRef) extends ActorWrapper(actor) {
 
   def create(idToken: JWT, phoneNumber: String)
-            (implicit ec: ExecutionContext): Future[ValidationNel[GoogleAccountValidationError, Unit]] = {
+            (implicit ec: ExecutionContext): Future[ValidationNel[GoogleAccountValidationError, Account]] = {
     implicit val timeout = GoogleAccountService.createTimeout
     val futureResult = actor ? GoogleAccountServiceActor.Create(idToken, phoneNumber)
 
     futureResult.map { result =>
-      result.asInstanceOf[ValidationNel[GoogleAccountValidationError, Unit]]
+      result.asInstanceOf[ValidationNel[GoogleAccountValidationError, Account]]
     }
   }
 

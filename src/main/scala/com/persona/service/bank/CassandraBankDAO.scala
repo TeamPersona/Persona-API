@@ -1,55 +1,46 @@
 package com.persona.service.bank
 
-import com.datastax.driver.core.Row
 import com.persona.service.account.Account
-import com.persona.util.db.PersonaCassandraConnector
-import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.dsl.{context => _, _}
-import com.websudos.phantom.keys.PartitionKey
 
-import scala.concurrent.{ExecutionContext, Future}
+import com.websudos.phantom.dsl.ResultSet
 
-class BankTable extends CassandraTable[BankTable, DataItem] {
+import scala.concurrent.{Future, ExecutionContext}
 
-  override def tableName: String = "bank"
+class CassandraBankDAO(dataItemsDAO: DataItemsDAO, dataCountsDAO: DataCountsDAO) extends BankDAO {
 
-  object user_id extends IntColumn(this) with PartitionKey[Int]
-
-  object creation_time extends DateTimeColumn(this) with ClusteringOrder[DateTime] with Descending
-
-  object category extends StringColumn(this)
-
-  object subcategory extends StringColumn(this)
-
-  object data extends MapColumn[BankTable, DataItem, String, String](this)
-
-  def fromRow(row: Row): DataItem = {
-    DataItem(
-      creation_time(row),
-      category(row),
-      subcategory(row),
-      data(row)
-    )
+  def retrieve(account: Account)(implicit ec: ExecutionContext): Future[List[DataItem]] = {
+    dataItemsDAO.retrieve(account)
   }
 
-}
+  def insert(account: Account, dataItem: DataItem)(implicit ec: ExecutionContext): Future[ResultSet] = {
+    val futureInsertionResult = dataItemsDAO.insert(account, dataItem)
+    val futureCountIncrementResult = dataCountsDAO.increment(account, dataItem.category, dataItem.subcategory)
 
-class CassandraBankDAO extends BankTable with BankDAO with PersonaCassandraConnector {
-
-  def listInformation(account: Account)(implicit ec: ExecutionContext): Future[Seq[DataItem]] = {
-    select.where(_.user_id eqs account.id)
-      .fetch
-      .map(_.toSeq)
+    for {
+      insertionResult <- futureInsertionResult
+      _ <- futureCountIncrementResult
+    } yield insertionResult
   }
 
-  def saveInformation(account: Account, dataItem: DataItem)
-                     (implicit ec: ExecutionContext): Future[ResultSet] = {
-    insert.value(_.user_id, account.id)
-          .value(_.creation_time, dataItem.creationTime)
-          .value(_.category, dataItem.category)
-          .value(_.subcategory, dataItem.subcategory)
-          .value(_.data, dataItem.data)
-          .future()
+  def has(account: Account, data: List[(String, String)])(implicit ec: ExecutionContext): Future[Boolean] = {
+    dataCountsDAO.counts(account, data).map { countsList =>
+      val counts = countsList.map(count => count.category -> Map(count.subcategory -> count)).toMap
+
+      data.par.forall { item =>
+        val (category, subcategory) = item
+        val dataCountOption = counts.get(category).flatMap { subcategories =>
+          subcategories.get(subcategory)
+        }
+
+        dataCountOption match {
+          case Some(dataCount) =>
+            dataCount.count > 0
+
+          case None =>
+            false
+        }
+      }
+    }
   }
 
 }

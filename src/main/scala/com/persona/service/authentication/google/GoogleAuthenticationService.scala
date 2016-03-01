@@ -57,12 +57,14 @@ private class GoogleAuthenticationServiceActor(
   }
 
   private[this] def validateAccountExists(googleId: String, actor: ActorRef) = {
-    googleAccountDAO.exists(googleId).onComplete {
-      case Success(exists) =>
-        if(exists) {
-          actor ! ValidTokenAndAccountResult()
-        } else {
-          actor ! ValidTokenInvalidAccountResult()
+    googleAccountDAO.retrieve(googleId).onComplete {
+      case Success(accountOption) =>
+        accountOption match {
+          case Some(account) =>
+            actor ! ValidTokenAndAccountResult(account)
+
+          case None =>
+            actor ! ValidTokenInvalidAccountResult()
         }
 
       case Failure(e) =>
