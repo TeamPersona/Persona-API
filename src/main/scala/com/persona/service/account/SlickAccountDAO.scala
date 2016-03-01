@@ -56,7 +56,7 @@ class SlickAccountDAO(db: Database) extends AccountDAO with CreatableAccountUtil
 
   def updateRewardPoints(account: Account, points: Int)(implicit ec: ExecutionContext): Future[Int] = {
     val query = accounts.filter(acc => acc.id === account.id)
-                        .map(acc => acc.balance)
+                        .map(acc => acc.rewardPoints)
                         .update(points)
 
     db.run(query)

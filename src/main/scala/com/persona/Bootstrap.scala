@@ -91,8 +91,9 @@ class Bootstrap
   private[this] val dataCountsDAO = new DataCountsDAO
   private[this] val bankDAO = new CassandraBankDAO(dataItemsDAO, dataCountsDAO)
   private[this] val dataSchemaLoader = new JsonDataSchemaLoader(personaConfig.getString("schemaDirectory"))
-  private[this] val dataItemValidator = new DataItemValidator(dataSchemaLoader)
-  private[this] val bankService = BankService(bankDAO, dataItemValidator)
+  private[this] val dataSchemaManager = new DataSchemaManager(dataSchemaLoader)
+  private[this] val dataItemValidator = new DataItemValidator(dataSchemaManager)
+  private[this] val bankService = BankService(bankDAO, dataItemValidator, accountService, dataSchemaManager)
 
   private[this] val offerDAO = new CassandraOfferDAO
   private[this] val offerService = OfferService(offerDAO)

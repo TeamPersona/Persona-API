@@ -4,7 +4,7 @@ import akka.actor._
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 
-import com.persona.service.account.Account
+import com.persona.service.account.{AccountService, Account}
 import com.persona.util.actor.ActorWrapper
 
 import com.websudos.phantom.dsl.ResultSet
@@ -27,7 +27,9 @@ private object BankServiceActor {
 
 private class BankServiceActor(
   bankDAO: BankDAO,
-  dataItemValidator: DataItemValidator)
+  dataItemValidator: DataItemValidator,
+  accountService: AccountService,
+  dataSchemaManager: DataSchemaManager)
   extends Actor {
 
   private[this] implicit val executionContext = context.dispatcher
@@ -74,9 +76,39 @@ private class BankServiceActor(
     val validationResult = dataItemValidator.validate(dataItem)
 
     if(validationResult.isSuccess) {
-      bankDAO.insert(account, dataItem).onComplete {
-        case Success(result) =>
-          actor ! result.successNel
+      bankDAO.has(account, dataItem.category, dataItem.subcategory).onComplete {
+        case Success(hasData) =>
+          // If this is the first item of its type, then add reward points to the account
+          val addRewardPointsFutureOption = if(hasData) {
+            None
+          } else {
+            dataSchemaManager.schema(dataItem.category, dataItem.subcategory).map { schema =>
+              accountService.addRewardPoints(account, schema.rewardPoints)
+            }
+          }
+
+          // No matter what, insert the item
+          val insertDataFuture = bankDAO.insert(account, dataItem)
+
+          // We have either 1 or 2 requests in flight
+          // If there are 2 requests, combine them into 1 request
+          val combinedFuture = addRewardPointsFutureOption.map { addRewardPointsFuture =>
+            for {
+              insertDataResult <- insertDataFuture
+              _ <- addRewardPointsFuture
+            } yield insertDataResult
+          } getOrElse {
+            insertDataFuture
+          }
+
+          // When the in flight requests are done, return the result to the sender
+          combinedFuture.onComplete {
+            case Success(result) =>
+              actor ! result.successNel
+
+            case Failure(e) =>
+              actor ! Status.Failure(e)
+          }
 
         case Failure(e) =>
           actor ! Status.Failure(e)
@@ -98,11 +130,11 @@ object BankService {
   private val saveTimeout = Timeout(60.seconds)
   private val hasTimeout = Timeout(60.seconds)
 
-  def apply(bankDAO: BankDAO, dataItemValidator: DataItemValidator)
+  def apply(bankDAO: BankDAO, dataItemValidator: DataItemValidator, accountService: AccountService, dataSchemaManager: DataSchemaManager)
            (implicit actorSystem: ActorSystem): BankService = {
     val actor = actorSystem.actorOf(
       Props(
-        new BankServiceActor(bankDAO, dataItemValidator)
+        new BankServiceActor(bankDAO, dataItemValidator, accountService, dataSchemaManager)
       )
     )
 
