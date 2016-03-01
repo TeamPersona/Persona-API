@@ -7,6 +7,7 @@ import scalaz.ValidationNel
 class DataSchema private(
   val category: String,
   val subcategory: String,
+  val rewardPoints: Int,
   val fieldDescriptors: Map[String, FieldDescriptor]) {
 
   require(category != null && !category.isEmpty)
@@ -57,12 +58,12 @@ class DataSchema private(
 
 object DataSchema {
 
-  def apply(category: String, subcategory:String, fields: Seq[FieldDescriptor]) = {
+  def apply(category: String, subcategory:String, rewardPoints: Int, fields: Seq[FieldDescriptor]): DataSchema = {
     val fieldsAsMap = fields.map { field =>
       field.name -> field
     }.toMap
 
-    new DataSchema(category, subcategory, fieldsAsMap)
+    new DataSchema(category, subcategory, rewardPoints, fieldsAsMap)
   }
 
 }

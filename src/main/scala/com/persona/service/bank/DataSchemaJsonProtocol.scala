@@ -28,6 +28,17 @@ trait DataSchemaJsonProtocol extends DefaultJsonProtocol with FieldDescriptorJso
       "subcategory" -> JsString(dataSchema.subcategory)
     }
 
+    private[this] def readRewardPoints(dataSchema: JsObject) = {
+      dataSchema.getFields("rewardPoints") match {
+        case Seq(JsNumber(rewardPoints)) => rewardPoints.intValue
+        case _ => throw new DeserializationException("Invalid data schema reward points")
+      }
+    }
+
+    private[this] def writeRewardPoints(dataSchema: DataSchema) = {
+      "rewardPoints" -> JsNumber(dataSchema.rewardPoints)
+    }
+
     private[this] def readFields(dataSchema: JsObject) = {
       dataSchema.getFields("fields") match {
         case Seq(fields: JsArray) => fields.convertTo[Seq[FieldDescriptor]]
@@ -43,6 +54,7 @@ trait DataSchemaJsonProtocol extends DefaultJsonProtocol with FieldDescriptorJso
       JsObject(
         writeCategory(dataSchema),
         writeSubcategory(dataSchema),
+        writeRewardPoints(dataSchema),
         writeFields(dataSchema)
       )
     }
@@ -51,9 +63,10 @@ trait DataSchemaJsonProtocol extends DefaultJsonProtocol with FieldDescriptorJso
       val dataSchemaAsJsObject = dataSchema.asJsObject
       val category = readCategory(dataSchemaAsJsObject)
       val subcategory = readSubcategory(dataSchemaAsJsObject)
+      val rewardPoints = readRewardPoints(dataSchemaAsJsObject)
       val fields = readFields(dataSchemaAsJsObject)
 
-      DataSchema(category, subcategory, fields)
+      DataSchema(category, subcategory, rewardPoints, fields)
     }
 
   }

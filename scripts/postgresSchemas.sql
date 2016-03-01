@@ -4,7 +4,9 @@ CREATE TABLE IF NOT EXISTS accounts
     given_name TEXT NOT NULL,
     family_name TEXT NOT NULL,
     email_address TEXT UNIQUE,
-    phone_number TEXT UNIQUE
+    phone_number TEXT UNIQUE,
+    reward_points INTEGER CHECK(reward_points >= 0),
+    balance INTEGER CHECK(balance >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS passwords

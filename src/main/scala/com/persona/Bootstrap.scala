@@ -1,12 +1,10 @@
 package com.persona
 
-import java.security.interfaces.{ECPrivateKey, ECPublicKey}
-import java.security.{KeyPairGenerator, SecureRandom}
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
+
 import com.persona.http.account.AccountApi
 import com.persona.http.authentication.AuthenticationApi
 import com.persona.http.authorization.AuthorizationApi
@@ -19,13 +17,18 @@ import com.persona.service.account.{AccountService, AccountValidator, SlickAccou
 import com.persona.service.authentication.AuthenticationService
 import com.persona.service.authentication.google.{GoogleAuthenticationService, GoogleTokenValidationService}
 import com.persona.service.authorization.{AuthorizationService, JWTAccessTokenGenerator, OAuthTokenGenerator, SlickRefreshTokenDAO}
-import com.persona.service.bank.{BankService, CassandraBankDAO, DataItemValidator, JsonDataSchemaLoader}
+import com.persona.service.bank._
 import com.persona.service.chat.ChatService
 import com.persona.service.offer.{CassandraOfferDAO, OfferService}
+
 import com.typesafe.config.Config
-import slick.jdbc.JdbcBackend._
+
+import java.security.interfaces.{ECPrivateKey, ECPublicKey}
+import java.security.{KeyPairGenerator, SecureRandom}
 
 import scala.concurrent.ExecutionContext
+
+import slick.jdbc.JdbcBackend._
 
 object Bootstrap {
 
@@ -84,10 +87,13 @@ class Bootstrap
     googleTokenValidationService
   )
 
-  private[this] val bankDAO = new CassandraBankDAO
+  private[this] val dataItemsDAO = new DataItemsDAO
+  private[this] val dataCountsDAO = new DataCountsDAO
+  private[this] val bankDAO = new CassandraBankDAO(dataItemsDAO, dataCountsDAO)
   private[this] val dataSchemaLoader = new JsonDataSchemaLoader(personaConfig.getString("schemaDirectory"))
-  private[this] val dataItemValidator = new DataItemValidator(dataSchemaLoader)
-  private[this] val bankService = BankService(bankDAO, dataItemValidator)
+  private[this] val dataSchemaManager = new DataSchemaManager(dataSchemaLoader)
+  private[this] val dataItemValidator = new DataItemValidator(dataSchemaManager)
+  private[this] val bankService = BankService(bankDAO, dataItemValidator, accountService, dataSchemaManager)
 
   private[this] val offerDAO = new CassandraOfferDAO
   private[this] val offerService = OfferService(offerDAO)

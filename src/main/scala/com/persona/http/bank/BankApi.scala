@@ -36,7 +36,7 @@ class BankApi
                 case Success(Some((account, _))) =>
                   val dataItem = rawDataItem.process()
 
-                  onComplete(bankService.saveInformation(account, dataItem)) {
+                  onComplete(bankService.insert(account, dataItem)) {
                     case Success(result) =>
                       result.fold(parseErrors => {
                         complete(StatusCodes.BadRequest, errorJson(parseErrors))
@@ -60,7 +60,7 @@ class BankApi
           oauth2Token { token =>
             onComplete(authorizationService.validate(token)) {
               case Success(Some((account, _))) =>
-                onComplete(bankService.listInformation(account)) {
+                onComplete(bankService.retrieve(account)) {
                   case Success(dataItems) =>
                     complete(dataItems.toJson)
 

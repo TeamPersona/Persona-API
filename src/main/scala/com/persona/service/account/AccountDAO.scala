@@ -12,4 +12,6 @@ trait AccountDAO {
 
   def create(accountDescriptor: AccountDescriptor, hashedPassword: String)(implicit ec: ExecutionContext): Future[Account]
 
+  def updateRewardPoints(account: Account, points: Int)(implicit ec: ExecutionContext): Future[Int]
+
 }
