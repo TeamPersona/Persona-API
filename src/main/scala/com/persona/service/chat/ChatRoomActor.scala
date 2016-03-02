@@ -18,7 +18,6 @@ class ChatRoomActor(offerId: UUID, chatDAO: ChatDAO) extends Actor {
       userType(user) match {
         case UserType.Consumer =>
           participants += user -> ref
-          supports.values.foreach(_ ! ChatMessage(user, "Joined", timestamp))
           dbWorker ! FetchHistory(offerId, user)
 
         case UserType.Partner =>
@@ -33,8 +32,9 @@ class ChatRoomActor(offerId: UUID, chatDAO: ChatDAO) extends Actor {
           supports -= user
       }
 
-    case AckMessage(user, timestamp) =>
-      dbWorker ! PersistMsg(offerId, user, ChatMessage(user, "Seen", timestamp))
+    case AckMessage(user) =>
+      val timestamp = new DateTime
+      dbWorker ! PersistAckMsg(offerId, user, timestamp)
       supports.values.foreach(_ ! ChatMessage(user, "Seen", timestamp));
 
     case msg: ChatMessage =>

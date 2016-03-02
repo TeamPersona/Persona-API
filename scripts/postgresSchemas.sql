@@ -23,15 +23,22 @@ CREATE TABLE IF NOT EXISTS google_accounts
 
 CREATE TABLE IF NOT EXISTS msg_history
 (
-    msg_id SERIAL,
+    msg_id SERIAL PRIMARY KEY,
     offerid UUID NOT NULL,
     userid TEXT NOT NULL,
-    type INTEGER,
     sender TEXT,
     message TEXT,
     timestamp TIMESTAMP
 );
-CREATE INDEX idx_msghistory ON msg_history (offerid, userid);
+CREATE INDEX IF NOT EXISTS idx_msghistory ON msg_history (offerid, userid);
+
+CREATE TABLE IF NOT EXISTS msg_ack
+(
+    offerid UUID NOT NULL,
+    userid TEXT NOT NULL,
+    timestamp TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_msg_ack ON msg_ack (offerid, userid);
 
 CREATE TABLE IF NOT EXISTS third_party_accounts
 (

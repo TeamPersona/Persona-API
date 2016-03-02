@@ -9,14 +9,8 @@ import akka.stream.scaladsl._
 import com.persona.service.chat.dao.ChatDAO
 import org.joda.time.DateTime
 import spray.json._
-import scala.concurrent.duration._
 
 class ChatRoom(id: UUID, actorSystem: ActorSystem, chatDAO: ChatDAO) extends ChatJsonProtocol {
-
-//  import actorSystem.dispatcher
-//  actorSystem.scheduler.schedule(10 seconds, 10 seconds) {
-//    chatActor ! ChatMessage("system", "alive", new DateTime)
-//  }
 
   private[this] val chatActor = actorSystem.actorOf(Props(classOf[ChatRoomActor], id, chatDAO))
 
@@ -31,9 +25,16 @@ class ChatRoom(id: UUID, actorSystem: ActorSystem, chatDAO: ChatDAO) extends Cha
               Flow[Message].collect {
                 case TextMessage.Strict(txt) => {
                   val jsonObj = txt.parseJson.asJsObject
-                  val receiver = jsonObj.fields("receiver").convertTo[String]
-                  val msg = jsonObj.fields("msg").convertTo[String]
-                  ChatMessage(user, msg, new DateTime)
+                  val msgType = jsonObj.fields("type").convertTo[Int]
+                  msgType match {
+                    case MessageType.Pong =>
+                      PongMessage(user)
+                    case MessageType.Chat =>
+                      val msg = jsonObj.fields("msg").convertTo[String]
+                      ChatMessage(user, msg, new DateTime)
+                    case MessageType.Ack =>
+                      AckMessage(user)
+                  }
                 }
               }
             )
