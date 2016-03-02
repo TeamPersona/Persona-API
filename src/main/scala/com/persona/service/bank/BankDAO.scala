@@ -12,10 +12,12 @@ trait BankDAO {
 
   def insert(account: Account, dataItem: DataItem)(implicit ec: ExecutionContext): Future[ResultSet]
 
-  def has(account: Account, data: List[(String, String)])(implicit ec: ExecutionContext): Future[Boolean]
+  def has(account: Account, data: List[(String, String)])(implicit ec: ExecutionContext): Future[List[Boolean]]
 
   def has(account: Account, category: String, subcategory: String)(implicit ec: ExecutionContext): Future[Boolean] = {
-    has(account, List((category, subcategory)))
+    has(account, List((category, subcategory))).map { list =>
+      list.head
+    }
   }
 
 }

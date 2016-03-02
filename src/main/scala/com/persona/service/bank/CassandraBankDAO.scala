@@ -22,11 +22,11 @@ class CassandraBankDAO(dataItemsDAO: DataItemsDAO, dataCountsDAO: DataCountsDAO)
     } yield insertionResult
   }
 
-  def has(account: Account, data: List[(String, String)])(implicit ec: ExecutionContext): Future[Boolean] = {
+  def has(account: Account, data: List[(String, String)])(implicit ec: ExecutionContext): Future[List[Boolean]] = {
     dataCountsDAO.counts(account, data).map { countsList =>
       val counts = countsList.map(count => count.category -> Map(count.subcategory -> count)).toMap
 
-      data.par.forall { item =>
+      val results = data.par.map { item =>
         val (category, subcategory) = item
         val dataCountOption = counts.get(category).flatMap { subcategories =>
           subcategories.get(subcategory)
@@ -40,6 +40,8 @@ class CassandraBankDAO(dataItemsDAO: DataItemsDAO, dataCountsDAO: DataCountsDAO)
             false
         }
       }
+
+      results.toList
     }
   }
 
