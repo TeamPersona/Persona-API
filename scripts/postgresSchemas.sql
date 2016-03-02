@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS google_accounts
 CREATE TABLE IF NOT EXISTS third_party_accounts
 (
     id TEXT PRIMARY KEY,
+    secret TEXT NOT NULL,
     creation_time TIMESTAMP
 );
 

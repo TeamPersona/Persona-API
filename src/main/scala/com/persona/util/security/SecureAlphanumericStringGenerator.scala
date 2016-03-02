@@ -1,4 +1,4 @@
-package com.persona.service.authorization
+package com.persona.util.security
 
 import java.security.SecureRandom
 

@@ -6,6 +6,7 @@ import akka.util.Timeout
 import com.persona.service.account.{AccountService, Account}
 import com.persona.service.account.thirdparty.ThirdPartyAccount
 import com.persona.util.actor.ActorWrapper
+import com.persona.util.security.SecureAlphanumericStringGenerator
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,7 +17,7 @@ object AuthorizationServiceActor {
   case class Authorize(account: Account, thirdPartyAccount: ThirdPartyAccount)
   case class Validate(accessToken: String)
   case class GenerateAuthorizationCode(account: Account, thirdPartyAccount: ThirdPartyAccount)
-  case class AuthorizationCodeGrant(authorizationCode: String, clientId: String)
+  case class AuthorizationCodeGrant(authorizationCode: String, clientId: String, clientSecret: String)
   case class RefreshTokenGrant(refreshToken: String, clientId: String)
 
 }
@@ -41,8 +42,8 @@ class AuthorizationServiceActor(
     case AuthorizationServiceActor.GenerateAuthorizationCode(account, thirdPartyAccount) =>
       handleGenerateAuthorizationCode(account, thirdPartyAccount, sender)
 
-    case AuthorizationServiceActor.AuthorizationCodeGrant(authorizationCode, clientId) =>
-      // TODO - Generate access token and refresh token (For supporting third parties)
+    case AuthorizationServiceActor.AuthorizationCodeGrant(authorizationCode, clientId, clientSecret) =>
+      handleAuthorizationCodeGrant(authorizationCode, clientId, clientSecret, sender)
 
     case AuthorizationServiceActor.RefreshTokenGrant(refreshToken, thirdPartyAccount) =>
       handleRefreshTokenGrant(refreshToken, thirdPartyAccount, sender)
@@ -54,14 +55,20 @@ class AuthorizationServiceActor(
     accessTokenGenerator.generate(account, thirdPartyAccount, accessTokenExpirationTime * 1000)
   }
 
-  private[this] def handleAuthorization(account: Account, thirdPartyAccount: ThirdPartyAccount, actor: ActorRef) = {
+  private[this] def authorize(account: Account, thirdPartyAccount: ThirdPartyAccount) = {
     val accessToken = generateAccessToken(account, thirdPartyAccount)
     val refreshToken = stringGenerator.generate
     val refreshTokenDescriptor = RefreshTokenDescriptor(refreshToken, account.id, thirdPartyAccount.id)
 
-    refreshTokenDAO.create(refreshTokenDescriptor).onComplete {
-      case Success(_) =>
-        actor ! AuthorizationResult(accessToken, accessTokenExpirationTime, Some(refreshToken))
+    refreshTokenDAO.create(refreshTokenDescriptor).map { _ =>
+      AuthorizationResult(accessToken, accessTokenExpirationTime, Some(refreshToken))
+    }
+  }
+
+  private[this] def handleAuthorization(account: Account, thirdPartyAccount: ThirdPartyAccount, actor: ActorRef) = {
+    authorize(account, thirdPartyAccount).onComplete {
+      case Success(authorizationResult) =>
+        actor ! authorizationResult
 
       case Failure(e) =>
         actor ! Status.Failure(e)
@@ -106,6 +113,39 @@ class AuthorizationServiceActor(
     authorizationCodeDAO.create(authorizationCode).onComplete {
       case Success(_) =>
         actor ! authorizationCode
+
+      case Failure(e) =>
+        actor ! Status.Failure(e)
+    }
+  }
+
+  private[this] def handleAuthorizationCodeGrant(authorizationCode: String, clientId: String, clientSecret: String, actor: ActorRef) = {
+    authorizationCodeDAO.validate(authorizationCode).onComplete {
+      case Success(Some(result)) =>
+        val (account, thirdPartyAccount) = result
+
+        if(thirdPartyAccount.id == clientId && thirdPartyAccount.secret == clientSecret) {
+          val futureInvalidation = authorizationCodeDAO.invalidate(authorizationCode)
+          val futureAuthorization = authorize(account, thirdPartyAccount)
+
+          val combinedFuture = for {
+            _ <- futureInvalidation
+            authorizationResult <- futureAuthorization
+          } yield authorizationResult
+
+          combinedFuture.onComplete {
+            case Success(authorizationResult) =>
+              actor ! Some(authorizationResult)
+
+            case Failure(e) =>
+              actor ! Status.Failure(e)
+          }
+        } else {
+          actor ! None
+        }
+
+      case Success(None) =>
+        actor ! None
 
       case Failure(e) =>
         actor ! Status.Failure(e)
@@ -199,9 +239,10 @@ class AuthorizationService private(actor: ActorRef) extends ActorWrapper(actor) 
     }
   }
 
-  def authorizationCodeGrant(authorizationCode: String, clientId: String)(implicit ec: ExecutionContext): Future[Option[AuthorizationResult]] = {
+  def authorizationCodeGrant(authorizationCode: String, clientId: String, clientSecret: String)
+                            (implicit ec: ExecutionContext): Future[Option[AuthorizationResult]] = {
     implicit val timeout = AuthorizationService.authorizationCodeGrantTimeout
-    val futureResult = actor ? AuthorizationServiceActor.AuthorizationCodeGrant(authorizationCode, clientId)
+    val futureResult = actor ? AuthorizationServiceActor.AuthorizationCodeGrant(authorizationCode, clientId, clientSecret)
 
     futureResult.map { result =>
       result.asInstanceOf[Option[AuthorizationResult]]

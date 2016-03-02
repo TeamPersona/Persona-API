@@ -11,6 +11,6 @@ trait AuthorizationCodeDAO {
 
   def validate(code: String)(implicit ec: ExecutionContext): Future[Option[(Account, ThirdPartyAccount)]]
 
-  def invalidate(authorizationCode: AuthorizationCode)(implicit ec: ExecutionContext): Future[Unit]
+  def invalidate(code: String)(implicit ec: ExecutionContext): Future[Unit]
 
 }

@@ -30,8 +30,8 @@ class SlickAuthorizationCodeDAO(db: Database) extends AuthorizationCodeDAO with 
     }
   }
 
-  def invalidate(authorizationCode: AuthorizationCode)(implicit ec: ExecutionContext): Future[Unit] = {
-    val query = authorizationCodes.filter(authCode => authCode.code === authorizationCode.code)
+  def invalidate(code: String)(implicit ec: ExecutionContext): Future[Unit] = {
+    val query = authorizationCodes.filter(authCode => authCode.code === code)
                                   .map(authCode => authCode.valid)
                                   .update(false)
 
