@@ -25,7 +25,8 @@ class AuthorizationServiceActor(
   accountService: AccountService,
   accessTokenGenerator: AccessTokenGenerator,
   accessTokenExpirationTime: Int,
-  tokenGenerator: OAuthTokenGenerator,
+  stringGenerator: SecureAlphanumericStringGenerator,
+  authorizationCodeDAO: AuthorizationCodeDAO,
   refreshTokenDAO: RefreshTokenDAO) extends Actor {
 
   private[this] implicit val executionContext = context.dispatcher
@@ -38,7 +39,7 @@ class AuthorizationServiceActor(
       handleValidation(accessToken, sender)
 
     case AuthorizationServiceActor.GenerateAuthorizationCode(account, thirdPartyAccount) =>
-      // TODO - Differentiate authorization code and access token (For supporting third parties)
+      handleGenerateAuthorizationCode(account, thirdPartyAccount, sender)
 
     case AuthorizationServiceActor.AuthorizationCodeGrant(authorizationCode, clientId) =>
       // TODO - Generate access token and refresh token (For supporting third parties)
@@ -55,7 +56,7 @@ class AuthorizationServiceActor(
 
   private[this] def handleAuthorization(account: Account, thirdPartyAccount: ThirdPartyAccount, actor: ActorRef) = {
     val accessToken = generateAccessToken(account, thirdPartyAccount)
-    val refreshToken = tokenGenerator.generate
+    val refreshToken = stringGenerator.generate
     val refreshTokenDescriptor = RefreshTokenDescriptor(refreshToken, account.id, thirdPartyAccount.id)
 
     refreshTokenDAO.create(refreshTokenDescriptor).onComplete {
@@ -98,6 +99,19 @@ class AuthorizationServiceActor(
     }
   }
 
+  private[this] def handleGenerateAuthorizationCode(account: Account, thirdPartyAccount: ThirdPartyAccount, actor: ActorRef) = {
+    val code = stringGenerator.generate
+    val authorizationCode = AuthorizationCode(code, account.id, thirdPartyAccount.id)
+
+    authorizationCodeDAO.create(authorizationCode).onComplete {
+      case Success(_) =>
+        actor ! authorizationCode
+
+      case Failure(e) =>
+        actor ! Status.Failure(e)
+    }
+  }
+
   private[this] def handleRefreshTokenGrant(refreshToken: String, clientId: String, actor: ActorRef) = {
     refreshTokenDAO.validate(refreshToken).onComplete {
       case Success(resultOption) =>
@@ -134,7 +148,9 @@ object AuthorizationService {
 
   def apply(accountService: AccountService,
             accessTokenGenerator: AccessTokenGenerator, accessTokenExpirationTime: Int,
-            oauthTokenGenerator: OAuthTokenGenerator, refreshTokenDAO: RefreshTokenDAO)
+            stringGenerator: SecureAlphanumericStringGenerator,
+            authorizationCodeDAO: AuthorizationCodeDAO,
+            refreshTokenDAO: RefreshTokenDAO)
            (implicit actorSystem: ActorSystem): AuthorizationService = {
     val actor = actorSystem.actorOf(
       Props(
@@ -142,7 +158,8 @@ object AuthorizationService {
           accountService,
           accessTokenGenerator,
           accessTokenExpirationTime,
-          oauthTokenGenerator,
+          stringGenerator,
+          authorizationCodeDAO,
           refreshTokenDAO
         )
       )
@@ -173,12 +190,12 @@ class AuthorizationService private(actor: ActorRef) extends ActorWrapper(actor) 
     }
   }
 
-  def generateAuthorizationCode(account: Account, thirdPartyAccount: ThirdPartyAccount)(implicit ec: ExecutionContext): Future[String] = {
+  def generateAuthorizationCode(account: Account, thirdPartyAccount: ThirdPartyAccount)(implicit ec: ExecutionContext): Future[AuthorizationCode] = {
     implicit val timeout = AuthorizationService.generateAuthorizationCodeTimeout
     val futureResult = actor ? AuthorizationServiceActor.GenerateAuthorizationCode(account, thirdPartyAccount)
 
     futureResult.map { result =>
-      result.asInstanceOf[String]
+      result.asInstanceOf[AuthorizationCode]
     }
   }
 

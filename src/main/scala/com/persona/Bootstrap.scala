@@ -16,7 +16,7 @@ import com.persona.service.account.thirdparty.SlickThirdPartyAccountDAO
 import com.persona.service.account.{AccountService, AccountValidator, SlickAccountDAO}
 import com.persona.service.authentication.AuthenticationService
 import com.persona.service.authentication.google.{GoogleAuthenticationService, GoogleTokenValidationService}
-import com.persona.service.authorization.{AuthorizationService, JWTAccessTokenGenerator, OAuthTokenGenerator, SlickRefreshTokenDAO}
+import com.persona.service.authorization._
 import com.persona.service.bank._
 import com.persona.service.chat.ChatService
 import com.persona.service.offer.{CassandraOfferDAO, OfferService}
@@ -70,13 +70,15 @@ class Bootstrap
   private[this] val issuer = personaConfig.getString("jwt_issuer")
   private[this] val accessTokenGenerator = new JWTAccessTokenGenerator(publicKey, privateKey, issuer)
   private[this] val accessTokenExpirationTime = personaConfig.getInt("oauth_expiration_time")
-  private[this] val oauthTokenGenerator = new OAuthTokenGenerator(secureRandom)
+  private[this] val stringGenerator = new SecureAlphanumericStringGenerator(secureRandom)
+  private[this] val authorizationCodeDAO = new SlickAuthorizationCodeDAO(db)
   private[this] val refreshTokenDAO = new SlickRefreshTokenDAO(db)
   private[this] val authorizationService = AuthorizationService(
     accountService,
     accessTokenGenerator,
     accessTokenExpirationTime,
-    oauthTokenGenerator,
+    stringGenerator,
+    authorizationCodeDAO,
     refreshTokenDAO
   )
 

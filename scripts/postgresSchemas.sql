@@ -27,6 +27,14 @@ CREATE TABLE IF NOT EXISTS third_party_accounts
     creation_time TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS authorization_codes
+(
+    code TEXT PRIMARY KEY,
+    account_id INT REFERENCES accounts,
+    third_party_account_id TEXT REFERENCES third_party_accounts,
+    valid BOOLEAN
+);
+
 CREATE TABLE IF NOT EXISTS refresh_tokens
 (
     token TEXT PRIMARY KEY,
