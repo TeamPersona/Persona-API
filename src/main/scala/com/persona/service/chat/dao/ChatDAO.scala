@@ -32,7 +32,7 @@ class MsgHistoryTable(tag: Tag) extends Table[MsgHistory](tag, "msg_history") {
   def message = column[String]("message")
   def timestamp = column[DateTime]("timestamp")
 
-  def idx = index("idx_msghistory", (offerId, userId), unique = true)
+  def idx = index("idx_msghistory", (offerId, userId))
 
   override def * = (msgId, offerId, userId, sender, message, timestamp) <> (MsgHistory.tupled, MsgHistory.unapply)
 
@@ -48,9 +48,17 @@ class MessageAcksTable(tag: Tag) extends Table[MsgAck](tag, "msg_ack") {
   def userId = column[String]("userid", O.PrimaryKey)
   def msgId = column[DateTime]("timestamp")
 
-  // def idx = index("idx_msg_ack", (offerId, userId), unique = true)
+  // def idx = index("idx_msg_ack", (offerId, userId))
 
   override def * = (offerId, userId, msgId) <> (MsgAck.tupled, MsgAck.unapply)
+
+}
+
+class ChatOfferTable(tag: Tag) extends Table[UUID](tag, "chat_offers") {
+
+  def offerId = column[UUID]("offerid", O.PrimaryKey)
+
+  override def * = offerId
 
 }
 
@@ -58,10 +66,13 @@ class ChatDAO(db: Database) {
 
   private[this] val msgHistory = TableQuery[MsgHistoryTable]
   private[this] val msgAck = TableQuery[MessageAcksTable]
+  private[this] val chatOffer = TableQuery[ChatOfferTable]
 
   def fetchMsgHistory(offerId: UUID, userid: String) = {
+    val validUsers = List(userid, "support")
     val query = msgHistory.filter(
-      row => row.offerId === offerId && row.userId === userid
+      // TODO: Hardcoded to support
+      row => row.offerId === offerId && row.userId.inSet(validUsers)
     ).map(row => (row.userId, row.sender, row.message, row.timestamp)).result
     db.run(query)
   }
@@ -73,6 +84,16 @@ class ChatDAO(db: Database) {
 
   def ackMsg(offerId: UUID, userid: String, timestamp: DateTime) = {
     val query = msgAck.insertOrUpdate(MsgAck(offerId, userid, timestamp))
+    db.run(query)
+  }
+
+  def getAllOfferId() = {
+    val query = chatOffer.result
+    db.run(query)
+  }
+
+  def createRoom(offerId: UUID) = {
+    val query = chatOffer += offerId
     db.run(query)
   }
 

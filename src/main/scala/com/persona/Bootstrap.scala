@@ -101,6 +101,7 @@ class Bootstrap
 
   private[this] val chatDAO = new ChatDAO(db)
   private[this] val chatService = new ChatService(chatDAO)
+  chatService.initialize()
 
   private[this] val accountApi = new AccountApi(accountService, accountValidator, googleAccountService, authorizationService)
   private[this] val authenticationApi = new AuthenticationApi(authenticationService, googleAuthenticationService, accountService, authorizationService)

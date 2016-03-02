@@ -1,5 +1,6 @@
 package com.persona.http.chat
 
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import com.persona.service.chat.ChatService
 
@@ -16,7 +17,7 @@ class ChatApi(chatService: ChatService, idleTimeout: Int) {
       } ~
       path("create") {
         chatService.createRoom(offerId)
-        complete("Done")
+        complete(StatusCodes.OK)
       }
     }
   }

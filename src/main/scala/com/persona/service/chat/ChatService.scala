@@ -9,6 +9,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
 import com.persona.service.chat.dao.ChatDAO
 import scala.concurrent.duration._
+import scala.util.{Success, Failure}
 
 class ChatService(dataAccess: ChatDAO)(implicit actorSystem: ActorSystem, materializer: Materializer) {
 
@@ -23,7 +24,11 @@ class ChatService(dataAccess: ChatDAO)(implicit actorSystem: ActorSystem, materi
     }
   }
 
-  def createRoom(offerId: UUID): Unit = {
+  def initialize(): Unit = {
+    ChatRoom.populateOffers()
+  }
+
+  def createRoom(offerId: UUID) = {
     ChatRoom.createRoom(offerId)
   }
 

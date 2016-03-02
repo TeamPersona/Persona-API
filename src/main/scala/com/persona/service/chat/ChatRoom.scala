@@ -9,6 +9,7 @@ import akka.stream.scaladsl._
 import com.persona.service.chat.dao.ChatDAO
 import org.joda.time.DateTime
 import spray.json._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class ChatRoom(id: UUID, actorSystem: ActorSystem, chatDAO: ChatDAO) extends ChatJsonProtocol {
 
@@ -70,11 +71,26 @@ object ChatRoom {
 
   var chatRooms = Map.empty[UUID, ChatRoom]
 
-  def find(id: UUID)(implicit actorSystem: ActorSystem): Option[ChatRoom] = chatRooms.get(id)
+  def find(id: UUID)(implicit actorSystem: ActorSystem, chatDAO: ChatDAO): Option[ChatRoom] = chatRooms.get(id)
 
-  def createRoom(id: UUID)(implicit actorSystem: ActorSystem, chatDAO: ChatDAO): Unit = {
-    val room = new ChatRoom(id, actorSystem, chatDAO)
-    chatRooms += id -> room
+  def populateOffers()(implicit actorSystem: ActorSystem, chatDAO: ChatDAO): Unit = {
+    val listIdFuture = chatDAO.getAllOfferId()
+    listIdFuture.onSuccess {
+      case listId =>
+        listId.map { id =>
+          val room = new ChatRoom(id, actorSystem, chatDAO)
+          chatRooms += id -> room
+        }
+    }
+  }
+
+  def createRoom(id: UUID)(implicit actorSystem: ActorSystem, chatDAO: ChatDAO) = {
+    chatDAO.createRoom(id).onSuccess {
+      case _ =>
+        val room = new ChatRoom(id, actorSystem, chatDAO)
+        chatRooms += id -> room
+    }
+
   }
 
 }
