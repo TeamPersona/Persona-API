@@ -54,9 +54,24 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
   }
 
   def participate(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
-    val action = sql"SELECT public.participate(#$offerid,#${account.id});".as[(Boolean)].headOption
-    db.run(action)
+    val offerBasicInfo = getBasic(offerid)
 
+    val tryparticipate = for {
+      obi <- offerBasicInfo
+      of <- getFiltersSQL(obi.get.offerID)
+      ori <- getRequiredInfoSQL(obi.get.offerID)
+      ofm <- cassandraBankDAO.has(account, of.toList)
+      orim <- cassandraBankDAO.has(account, ori.toList)
+    } yield {
+      val eligible = isEligible(createIsMissing(of.toList, ofm).map(missing => !missing._2._2), createIsMissing(ori.toList, orim).map(missing => !missing._2._2))
+      if (eligible) {
+        val action = sql"SELECT public.participate(#$offerid,#${account.id});".as[(Boolean)].headOption
+        db.run(action)
+      } else {
+        Future{Option{false}}
+      }
+    }
+    tryparticipate.flatMap(identity)
   }
 
   def unparticipate(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
@@ -64,8 +79,6 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
     db.run(action)
 
   }
-
-
 
   def listBasic(lastID: Int)(implicit ec: ExecutionContext): Future[Seq[OfferBasicInfo]] = {
     val action = offers.filter(_.offerID > lastID).take(25).result
@@ -79,50 +92,28 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
 
   private def getFiltersSQL(getId: Int)(implicit ec: ExecutionContext): Future[Vector[(String, String)]] = {
     val offerid = getId.toString
-    val action = sql"""SELECT
-                       picategory.category,
-                       pifields.pifield
-                       FROM offercriteria
-                       INNER JOIN pifields
-                         ON offercriteria.pifieldid = pifields.pifieldid
-                       INNER JOIN picategory
-                         ON picategory.picategoryid = pifields.picategoryid
-                       WHERE offercriteria.offercriteriasubindex = 1
-                       AND offercriteria.offerid = #$offerid""".as[(String, String)]
+    val action = sql"SELECT * from public.getfilters(#$offerid);".as[(String, String)]
     db.run(action)
   }
 
 
   private def getRequiredInfoSQL(getId: Int)(implicit ec: ExecutionContext): Future[Vector[(String, String)]] = {
     val offerid = getId.toString
-    val action = sql"""SELECT
-                       picategory.category,
-                       pifields.pifield
-                       FROM offerinforequired
-                       INNER JOIN pifields
-                       	ON offerinforequired.pifieldid = pifields.pifieldid
-                       INNER JOIN picategory
-                       	ON picategory.picategoryid = pifields.picategoryid
-                       WHERE offerinforequired.offerid = #$offerid""".as[(String, String)]
+    val action = sql"SELECT * from public.getrequiredinfo(#$offerid);".as[(String, String)]
     db.run(action)
   }
 
 
   private def getTypesSQL(offerid: Int)(implicit ec: ExecutionContext): Future[Vector[(String)]] = {
-    val action = sql"""SELECT offertypes.offertype
-                        FROM offercategories
-                        INNER JOIN offertypes
-                       	ON offercategories.offertypeid = offertypes.offertypeid
-                       WHERE offercategories.offerid =  #$offerid
-                       ORDER BY offercategories.typeindex""".as[(String)]
+    val action = sql"SELECT public.gettypes(#$offerid);".as[(String)]
     db.run(action)
   }
 
-    private def getParticipatingSQL(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
-      val userID = account.id
-      val action = sql"SELECT CASE WHEN part >= 1 THEN TRUE ELSE FALSE END FROM (SELECT COUNT(*) as part FROM offerparticipation WHERE offerid = #$offerid AND userid = #$userID) as participating;".as[(Boolean)].headOption
-      db.run(action)
-    }
+  private def getParticipatingSQL(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+    val userID = account.id
+    val action = sql"SELECT public.getparticipating(#$offerid,#$userID);".as[(Boolean)].headOption
+    db.run(action)
+  }
 
 
   def createOffer(account: Account, offerBasicInfo: OfferBasicInfo)(implicit ec: ExecutionContext) : Future[Offer] =  {
