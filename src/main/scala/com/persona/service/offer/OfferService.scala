@@ -16,6 +16,8 @@ private object OfferServiceActor {
 
   case class ListOffers(lastID: Int)
   case class GetOffer(id: Int)
+  case class Participate(offerid: Int, userid: Int)
+  case class UnParticipate(offerid: Int, userid: Int)
 
 }
 
@@ -29,6 +31,12 @@ private class OfferServiceActor(offerDAO: OfferDAO) extends Actor {
 
     case OfferServiceActor.GetOffer(id) =>
       offerDAO.get(id).pipeTo(sender)
+
+    case OfferServiceActor.Participate(offerid, userid) =>
+      offerDAO.participate(offerid, userid).pipeTo(sender)
+
+    case OfferServiceActor.UnParticipate(offerid, userid) =>
+      offerDAO.unparticipate(offerid, userid).pipeTo(sender)
   }
 
 }
@@ -67,6 +75,24 @@ class OfferService private(actor: ActorRef) extends ActorWrapper(actor) {
 
     futureResult.map { result =>
       result.asInstanceOf[Option[Offer]]
+    }
+  }
+
+  def participate(offerid: Int, userid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+    implicit val timeout = OfferService.GetTimeout
+    val futureResult = actor ? OfferServiceActor.Participate(offerid, userid)
+
+    futureResult.map { result =>
+      result.asInstanceOf[Option[Boolean]]
+    }
+  }
+
+  def unparticipate(offerid: Int, userid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+    implicit val timeout = OfferService.GetTimeout
+    val futureResult = actor ? OfferServiceActor.UnParticipate(offerid, userid)
+
+    futureResult.map { result =>
+      result.asInstanceOf[Option[Boolean]]
     }
   }
 

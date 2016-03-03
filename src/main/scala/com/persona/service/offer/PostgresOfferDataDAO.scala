@@ -51,6 +51,18 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
     }
   }
 
+  def participate(offerid: Int, userid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+    val action = sql"SELECT public.participate(#$offerid,#$userid);".as[(Boolean)].headOption
+    db.run(action)
+
+  }
+
+  def unparticipate(offerid: Int, userid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+    val action = sql"SELECT public.unparticipate(#$offerid,#$userid);".as[(Boolean)].headOption
+    db.run(action)
+
+  }
+
 
 
   def listBasic(lastID: Int)(implicit ec: ExecutionContext): Future[Seq[OfferBasicInfo]] = {
@@ -94,13 +106,7 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
   }
 
 
-  private def createOfferFilter(filters: Vector[(String, String)]) : List[Map[String, String]] = {
-    var filterList = ListBuffer[Map[String, String]]()
-    filters.foreach { filter =>
-      filterList += Map("informationType" -> filter._2,  "informationMissing" -> "true") //TODO: get from taylor, also JSON thing can't do any, so using string for the bool for now
-    }
-    filterList.toList
-  }
+
 
   //TODO: need to return the categories that are not basic info, and check them in cassandra
   private def getTypesSQL(getId: Int)(implicit ec: ExecutionContext): Future[Vector[(String)]] = {
@@ -171,6 +177,12 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
 
   }
 
-
+  private def createOfferFilter(filters: Vector[(String, String)]) : List[Map[String, String]] = {
+    var filterList = ListBuffer[Map[String, String]]()
+    filters.foreach { filter =>
+      filterList += Map("informationType" -> filter._2,  "informationMissing" -> "true") //TODO: get from taylor
+    }
+    filterList.toList
+  }
 
 }
