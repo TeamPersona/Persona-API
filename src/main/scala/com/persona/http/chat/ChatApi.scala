@@ -29,7 +29,7 @@ class ChatApi(chatService: ChatService, authorizationService: AuthorizationServi
 //                complete(StatusCodes.InternalServerError)
 //            }
 //          }
-//        }
+        }
       } ~
       path("create") {
         chatService.createRoom(offerId)
