@@ -1,9 +1,10 @@
 package com.persona.service.offer
 
+import com.persona.service.account.Account
 import org.joda.time.DateTime
 
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import slick.driver.PostgresDriver.api._
 import com.github.tototoshi.slick.PostgresJodaSupport._
 
@@ -28,22 +29,22 @@ class OfferDataTable(tag: Tag) extends Table[OfferBasicInfo] (tag,"view_offerdat
 class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_)) with OfferDAO  {
   val offers = TableQuery[OfferDataTable]
 
-  def list(lastID: Int)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+  def list(account: Account, lastID: Int)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
     val offerBasicInfo = listBasic(lastID)
 
     offerBasicInfo.flatMap { optionOfferInfo =>
       val seqFuture = optionOfferInfo.map { offerInfo =>
-        createOffer(offerInfo)
+        createOffer(account, offerInfo)
       }
       Future.sequence(seqFuture)
     }
   }
 
-  def get(getId: Int)(implicit ec: ExecutionContext): Future[Option[Offer]] = {
-    val offerBasicInfo = getBasic(getId)
+  def get(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Offer]] = {
+    val offerBasicInfo = getBasic(offerid)
     offerBasicInfo.map { offerOptionInfo =>
       offerOptionInfo.map { offerInfo =>
-        createOffer(offerInfo)
+        createOffer(account, offerInfo)
       }
     }.flatMap { offer =>
       offer.map { f => f.map(Option(_))
@@ -51,14 +52,14 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
     }
   }
 
-  def participate(offerid: Int, userid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
-    val action = sql"SELECT public.participate(#$offerid,#$userid);".as[(Boolean)].headOption
+  def participate(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+    val action = sql"SELECT public.participate(#$offerid,#${account.id});".as[(Boolean)].headOption
     db.run(action)
 
   }
 
-  def unparticipate(offerid: Int, userid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
-    val action = sql"SELECT public.unparticipate(#$offerid,#$userid);".as[(Boolean)].headOption
+  def unparticipate(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+    val action = sql"SELECT public.unparticipate(#$offerid,#${account.id});".as[(Boolean)].headOption
     db.run(action)
 
   }
@@ -109,8 +110,7 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
 
 
   //TODO: need to return the categories that are not basic info, and check them in cassandra
-  private def getTypesSQL(getId: Int)(implicit ec: ExecutionContext): Future[Vector[(String)]] = {
-    val offerid = getId.toString
+  private def getTypesSQL(offerid: Int)(implicit ec: ExecutionContext): Future[Vector[(String)]] = {
     val action = sql"""SELECT offertypes.offertype
                         FROM offercategories
                         INNER JOIN offertypes
@@ -120,9 +120,8 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
     db.run(action)
   }
 
-    private def getParticipatingSQL(getId: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
-      val offerid = getId.toString
-      val userID = 5 //TODO: get userID
+    private def getParticipatingSQL(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+      val userID = account.id
       val action = sql"SELECT CASE WHEN part >= 1 THEN TRUE ELSE FALSE END FROM (SELECT COUNT(*) as part FROM offerparticipation WHERE offerid = #$offerid AND userid = #$userID) as participating;".as[(Boolean)].headOption
       db.run(action)
     }
@@ -138,11 +137,11 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
 //    }
   }
 
-  def createOffer(offerBasicInfo: OfferBasicInfo)(implicit ec: ExecutionContext) : Future[Offer] =  {
+  def createOffer(account: Account, offerBasicInfo: OfferBasicInfo)(implicit ec: ExecutionContext) : Future[Offer] =  {
     val offerTypes = getTypesSQL(offerBasicInfo.offerID)
     val offerFilters = getFiltersSQL(offerBasicInfo.offerID)
     val offerRequiredInfo = getRequiredInfoSQL(offerBasicInfo.offerID)
-    val offerParticipating = getParticipatingSQL(offerBasicInfo.offerID)
+    val offerParticipating = getParticipatingSQL(account, offerBasicInfo.offerID)
     val offerEligible = getEligibleBasic(offerBasicInfo.offerID)
 
     for {

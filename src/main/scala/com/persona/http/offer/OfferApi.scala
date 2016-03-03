@@ -23,26 +23,57 @@ class OfferApi(offerService: OfferService, authorizationService: AuthorizationSe
     redirectToNoTrailingSlashIfPresent(StatusCodes.Found) {
       pathPrefix("offer") {
         pathPrefix("list") {
-          path(IntNumber) { id =>
-            onComplete(offerService.list(id)) {
-              case Success(offers) => complete(StatusCodes.OK, offers.toJson)
-              case Failure(e) => complete(StatusCodes.InternalServerError)
+          path(IntNumber) { offerid =>
+            oauth2Token { token =>
+              onComplete(authorizationService.validate(token)) {
+                case Success(Some((account, _))) =>
+                  onComplete(offerService.list(account, offerid)) {
+                    case Success(offers) => complete(StatusCodes.OK, offers.toJson)
+                    case Failure(e) => complete(StatusCodes.InternalServerError)
+                  }
+
+                case Success(None) =>
+                  complete(StatusCodes.BadRequest)
+
+                case Failure(e) =>
+                  complete(StatusCodes.InternalServerError)
+              }
             }
           }
         } ~
         pathPrefix("participate") {
           path(IntNumber) { offerid =>
-            onComplete(offerService.participate(offerid, 5)) {
-              case Success(successful) => complete(StatusCodes.OK, successful.toJson)
-              case Failure(e) => complete(StatusCodes.InternalServerError)
+            oauth2Token { token =>
+              onComplete(authorizationService.validate(token)) {
+                case Success(Some((account, _))) =>
+                  onComplete(offerService.participate(account, offerid)) {
+                    case Success(successful) => complete(StatusCodes.OK, successful.toJson)
+                    case Failure(e) => complete(StatusCodes.InternalServerError)
+                  }
+                case Success(None) =>
+                  complete(StatusCodes.BadRequest)
+
+                case Failure(e) =>
+                  complete(StatusCodes.InternalServerError)
+              }
             }
           }
         } ~
           pathPrefix("unparticipate") {
             path(IntNumber) { offerid =>
-              onComplete(offerService.unparticipate(offerid, 5)) {
-                case Success(successful) => complete(StatusCodes.OK, successful.toJson)
-                case Failure(e) => complete(StatusCodes.InternalServerError)
+              oauth2Token { token =>
+                onComplete(authorizationService.validate(token)) {
+                  case Success(Some((account, _))) =>
+                    onComplete(offerService.unparticipate(account, offerid)) {
+                      case Success(successful) => complete(StatusCodes.OK, successful.toJson)
+                      case Failure(e) => complete(StatusCodes.InternalServerError)
+                    }
+                  case Success(None) =>
+                    complete(StatusCodes.BadRequest)
+
+                  case Failure(e) =>
+                    complete(StatusCodes.InternalServerError)
+                }
               }
             }
           } ~
@@ -50,7 +81,7 @@ class OfferApi(offerService: OfferService, authorizationService: AuthorizationSe
           oauth2Token { token =>
             onComplete(authorizationService.validate(token)) {
               case Success(Some((account, _))) =>
-                onComplete(offerService.get(id)) {
+                onComplete(offerService.get(account, id)) {
                   case Success(maybeOffer) =>
                     maybeOffer.map { offer =>
                       complete(StatusCodes.OK, offer.toJson)
@@ -66,11 +97,6 @@ class OfferApi(offerService: OfferService, authorizationService: AuthorizationSe
                 complete(StatusCodes.InternalServerError)
             }
           }
-
-
-
-
-
         }
       }
     }
