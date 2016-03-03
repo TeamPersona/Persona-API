@@ -2,6 +2,7 @@ package com.persona.service.account.thirdparty
 
 import java.security.SecureRandom
 
+import com.persona.util.security.SecureAlphanumericStringGenerator
 import org.joda.time.DateTime
 import slick.driver.PostgresDriver.api._
 
@@ -9,7 +10,11 @@ import scala.concurrent.{Future, ExecutionContext}
 
 private class InvalidThirdPartyAccountException extends RuntimeException
 
-class SlickThirdPartyAccountDAO(db: Database, random: SecureRandom) extends ThirdPartyAccountDAO {
+class SlickThirdPartyAccountDAO(
+  db: Database,
+  random: SecureRandom,
+  stringGenerator: SecureAlphanumericStringGenerator)
+  extends ThirdPartyAccountDAO {
 
   private[this] val thirdPartyAccounts = TableQuery[ThirdPartyAccountTable]
 
@@ -32,7 +37,8 @@ class SlickThirdPartyAccountDAO(db: Database, random: SecureRandom) extends Thir
   def create()(implicit ec: ExecutionContext): Future[ThirdPartyAccount] = {
     val randomLong = toUnsignedLong(random.nextLong())
     val clientId = randomLong + ".apps.uwpersona.com"
-    val thirdPartyAccount = ThirdPartyAccount(clientId, DateTime.now)
+    val clientSecret = stringGenerator.generate
+    val thirdPartyAccount = ThirdPartyAccount(clientId, clientSecret, DateTime.now)
 
     db.run(thirdPartyAccounts += thirdPartyAccount).map { _ =>
       thirdPartyAccount
