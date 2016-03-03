@@ -58,8 +58,8 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
 
     val tryparticipate = for {
       obi <- offerBasicInfo
-      of <- getFiltersSQL(obi.get.offerID)
-      ori <- getRequiredInfoSQL(obi.get.offerID)
+      of <- getFilters(obi.get.offerID)
+      ori <- getRequiredInfo(obi.get.offerID)
       ofm <- cassandraBankDAO.has(account, of.toList)
       orim <- cassandraBankDAO.has(account, ori.toList)
     } yield {
@@ -90,26 +90,26 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
     db.run(action)
   }
 
-  private def getFiltersSQL(getId: Int)(implicit ec: ExecutionContext): Future[Vector[(String, String)]] = {
+  private def getFilters(getId: Int)(implicit ec: ExecutionContext): Future[Vector[(String, String)]] = {
     val offerid = getId.toString
     val action = sql"SELECT * from public.getfilters(#$offerid);".as[(String, String)]
     db.run(action)
   }
 
 
-  private def getRequiredInfoSQL(getId: Int)(implicit ec: ExecutionContext): Future[Vector[(String, String)]] = {
+  private def getRequiredInfo(getId: Int)(implicit ec: ExecutionContext): Future[Vector[(String, String)]] = {
     val offerid = getId.toString
     val action = sql"SELECT * from public.getrequiredinfo(#$offerid);".as[(String, String)]
     db.run(action)
   }
 
 
-  private def getTypesSQL(offerid: Int)(implicit ec: ExecutionContext): Future[Vector[(String)]] = {
+  private def getTypes(offerid: Int)(implicit ec: ExecutionContext): Future[Vector[(String)]] = {
     val action = sql"SELECT public.gettypes(#$offerid);".as[(String)]
     db.run(action)
   }
 
-  private def getParticipatingSQL(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+  private def getParticipating(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
     val userID = account.id
     val action = sql"SELECT public.getparticipating(#$offerid,#$userID);".as[(Boolean)].headOption
     db.run(action)
@@ -117,10 +117,10 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
 
 
   def createOffer(account: Account, offerBasicInfo: OfferBasicInfo)(implicit ec: ExecutionContext) : Future[Offer] =  {
-    val offerTypes = getTypesSQL(offerBasicInfo.offerID)
-    val offerFilters = getFiltersSQL(offerBasicInfo.offerID)
-    val offerRequiredInfo = getRequiredInfoSQL(offerBasicInfo.offerID)
-    val offerParticipating = getParticipatingSQL(account, offerBasicInfo.offerID)
+    val offerTypes = getTypes(offerBasicInfo.offerID)
+    val offerFilters = getFilters(offerBasicInfo.offerID)
+    val offerRequiredInfo = getRequiredInfo(offerBasicInfo.offerID)
+    val offerParticipating = getParticipating(account, offerBasicInfo.offerID)
 
     for {
       ot <- offerTypes
