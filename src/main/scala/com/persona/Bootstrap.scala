@@ -98,7 +98,7 @@ class Bootstrap
   private[this] val dataItemValidator = new DataItemValidator(dataSchemaManager)
   private[this] val bankService = BankService(bankDAO, dataItemValidator, accountService, dataSchemaManager)
 
-  private[this] val offerDAO = new PostgresOfferDataDAO(db)
+  private[this] val offerDAO = new PostgresOfferDataDAO(db, bankDAO)
   private[this] val offerService = OfferService(offerDAO)
 
   private[this] val chatService = new ChatService

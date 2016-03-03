@@ -1,6 +1,7 @@
 package com.persona.service.offer
 
 import com.persona.service.account.Account
+import com.persona.service.bank.CassandraBankDAO
 import org.joda.time.DateTime
 
 import scala.collection.mutable.ListBuffer
@@ -26,7 +27,7 @@ class OfferDataTable(tag: Tag) extends Table[OfferBasicInfo] (tag,"view_offerdat
 
 }
 
-class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_)) with OfferDAO  {
+class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) extends TableQuery(new OfferDataTable(_)) with OfferDAO  {
   val offers = TableQuery[OfferDataTable]
 
   def list(account: Account, lastID: Int)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
@@ -107,9 +108,6 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
   }
 
 
-
-
-  //TODO: need to return the categories that are not basic info, and check them in cassandra
   private def getTypesSQL(offerid: Int)(implicit ec: ExecutionContext): Future[Vector[(String)]] = {
     val action = sql"""SELECT offertypes.offertype
                         FROM offercategories
@@ -127,39 +125,31 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
     }
 
 
-
-  // TODO: call taylor's to get this
-  private def getEligibleBasic (getId: Int)(implicit ec: ExecutionContext): Future[Boolean] = {
-    Future{true}
-//    getEligibleBasicSQL(getId) match {
-//      case Success(eligible) => eligible.getOrElse(false)
-//      case Failure(f) => false
-//    }
-  }
-
   def createOffer(account: Account, offerBasicInfo: OfferBasicInfo)(implicit ec: ExecutionContext) : Future[Offer] =  {
     val offerTypes = getTypesSQL(offerBasicInfo.offerID)
     val offerFilters = getFiltersSQL(offerBasicInfo.offerID)
     val offerRequiredInfo = getRequiredInfoSQL(offerBasicInfo.offerID)
     val offerParticipating = getParticipatingSQL(account, offerBasicInfo.offerID)
-    val offerEligible = getEligibleBasic(offerBasicInfo.offerID)
 
     for {
       ot <- offerTypes
       of <- offerFilters
       ori <- offerRequiredInfo
-      oe <- offerEligible
       op <- offerParticipating
-    } yield generateOffer(offerBasicInfo, ot, of, ori, oe, op.getOrElse(false))
+
+      ofm <- cassandraBankDAO.has(account, of.toList)
+      orim <- cassandraBankDAO.has(account, ori.toList)
+    } yield generateOffer(offerBasicInfo, ot, createIsMissing(of.toList, ofm), createIsMissing(ori.toList, orim), isEligible(ofm, orim), op.getOrElse(false), account)
 
   }
 
   def generateOffer (offerBasicInfo: OfferBasicInfo,
                      offerTypes: Vector[(String)],
-                     offerFilters: Vector[(String, String)],
-                     offerRequiredInfo: Vector[(String, String)],
+                     offerFilters: List[(String, (String, Boolean))],
+                     offerRequiredInfo: List[(String, (String, Boolean))],
                      offerEligible: Boolean,
-                     offerParticipating: Boolean): Offer = {
+                     offerParticipating: Boolean,
+                     account: Account): Offer = {
 
     val ot = offerTypes.toList
 
@@ -176,12 +166,26 @@ class PostgresOfferDataDAO(db: Database) extends TableQuery(new OfferDataTable(_
 
   }
 
-  private def createOfferFilter(filters: Vector[(String, String)]) : List[Map[String, String]] = {
+  private def createOfferFilter(filters: List[(String, (String, Boolean))]) : List[Map[String, String]] = {
     var filterList = ListBuffer[Map[String, String]]()
     filters.foreach { filter =>
-      filterList += Map("informationType" -> filter._2,  "informationMissing" -> "true") //TODO: get from taylor
+      filterList += Map("informationType" -> filter._2._1,  "informationMissing" -> filter._2._2.toString)
     }
     filterList.toList
+  }
+
+
+  def createIsMissing(filters: List[(String, String)], has: List[Boolean]) : List[(String, (String, Boolean))] = {
+    // has() is if the information is there, but we need if it is missing
+
+    val filtersMissing = filters.zip(has.map(hasinfo => !hasinfo))
+    filtersMissing.map { filter =>
+      (filter._1._1, (filter._1._2, filter._2))
+    }
+  }
+
+  private def isEligible (filters: List[Boolean], required: List[Boolean])(implicit ec: ExecutionContext): Boolean = {
+    !filters.contains(false) && !required.contains(false)
   }
 
 }
