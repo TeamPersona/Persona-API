@@ -48,7 +48,16 @@ CREATE TABLE IF NOT EXISTS chat_offers
 CREATE TABLE IF NOT EXISTS third_party_accounts
 (
     id TEXT PRIMARY KEY,
+    secret TEXT NOT NULL,
     creation_time TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS authorization_codes
+(
+    code TEXT PRIMARY KEY,
+    account_id INT REFERENCES accounts,
+    third_party_account_id TEXT REFERENCES third_party_accounts,
+    valid BOOLEAN
 );
 
 CREATE TABLE IF NOT EXISTS refresh_tokens

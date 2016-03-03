@@ -16,11 +16,12 @@ import com.persona.service.account.thirdparty.SlickThirdPartyAccountDAO
 import com.persona.service.account.{AccountService, AccountValidator, SlickAccountDAO}
 import com.persona.service.authentication.AuthenticationService
 import com.persona.service.authentication.google.{GoogleAuthenticationService, GoogleTokenValidationService}
-import com.persona.service.authorization.{AuthorizationService, JWTAccessTokenGenerator, OAuthTokenGenerator, SlickRefreshTokenDAO}
+import com.persona.service.authorization._
 import com.persona.service.bank._
 import com.persona.service.chat.ChatService
 import com.persona.service.chat.dao.ChatDAO
 import com.persona.service.offer.{CassandraOfferDAO, OfferService}
+import com.persona.util.security.SecureAlphanumericStringGenerator
 
 import com.typesafe.config.Config
 
@@ -46,6 +47,7 @@ class Bootstrap
   private[this] val db = Database.forConfig("db", personaConfig)
 
   private[this] val secureRandom = SecureRandom.getInstanceStrong
+  private[this] val stringGenerator = new SecureAlphanumericStringGenerator(secureRandom)
 
   private[this] val keyGenerator = KeyPairGenerator.getInstance("EC")
   keyGenerator.initialize(Bootstrap.ECKeySize, secureRandom)
@@ -54,7 +56,7 @@ class Bootstrap
   private[this] val accountValidator = new AccountValidator
   private[this] val passwordLogRounds = personaConfig.getInt("passwordLogRounds")
   private[this] val accountDAO = new SlickAccountDAO(db)
-  private[this] val thirdPartyAccountDAO = new SlickThirdPartyAccountDAO(db, secureRandom)
+  private[this] val thirdPartyAccountDAO = new SlickThirdPartyAccountDAO(db, secureRandom, stringGenerator)
   private[this] val accountService = AccountService(accountDAO, thirdPartyAccountDAO, passwordLogRounds)
   private[this] val googleTokenConverter = new GoogleTokenConverter
   private[this] val googleAccountDAO = new SlickGoogleAccountDAO(db)
@@ -71,13 +73,14 @@ class Bootstrap
   private[this] val issuer = personaConfig.getString("jwt_issuer")
   private[this] val accessTokenGenerator = new JWTAccessTokenGenerator(publicKey, privateKey, issuer)
   private[this] val accessTokenExpirationTime = personaConfig.getInt("oauth_expiration_time")
-  private[this] val oauthTokenGenerator = new OAuthTokenGenerator(secureRandom)
+  private[this] val authorizationCodeDAO = new SlickAuthorizationCodeDAO(db)
   private[this] val refreshTokenDAO = new SlickRefreshTokenDAO(db)
   private[this] val authorizationService = AuthorizationService(
     accountService,
     accessTokenGenerator,
     accessTokenExpirationTime,
-    oauthTokenGenerator,
+    stringGenerator,
+    authorizationCodeDAO,
     refreshTokenDAO
   )
 
