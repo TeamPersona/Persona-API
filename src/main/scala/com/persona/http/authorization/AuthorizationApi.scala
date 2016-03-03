@@ -25,8 +25,8 @@ class AuthorizationApi
         post {
           formField('grant_type) {
             case "authorization_code" =>
-              formFields('code, 'client_id) { (code, clientId) =>
-                onComplete(authorizationService.authorizationCodeGrant(code, clientId)) {
+              formFields('code, 'client_id, 'client_secret) { (code, clientId, clientSecret) =>
+                onComplete(authorizationService.authorizationCodeGrant(code, clientId, clientSecret)) {
                   case Success(result) =>
                     result match {
                       case Some(authorizationResult) =>
