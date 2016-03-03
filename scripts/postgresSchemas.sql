@@ -43,7 +43,7 @@ CREATE INDEX IF NOT EXISTS idx_msg_ack ON msg_ack (offerid, userid);
 CREATE TABLE IF NOT EXISTS chat_offers
 (
   offerid UUID PRIMARY KEY
-)
+);
 
 CREATE TABLE IF NOT EXISTS third_party_accounts
 (
