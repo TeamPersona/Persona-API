@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.actor._
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
+import com.persona.service.account.Account
 import com.persona.util.actor.ActorWrapper
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
@@ -14,8 +15,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 private object OfferServiceActor {
 
-  object ListOffers
-  case class GetOffer(id: UUID)
+  case class ListOffers(account: Account, lastID: Int)
+  case class GetOffer(account: Account, offerid: Int)
+  case class Participate(account: Account, offerid: Int)
+  case class UnParticipate(account: Account, offerid: Int)
 
 }
 
@@ -24,18 +27,17 @@ private class OfferServiceActor(offerDAO: OfferDAO) extends Actor {
   private[this] implicit val executionContext = context.dispatcher
 
   def receive: Receive = {
-    case OfferServiceActor.ListOffers =>
-      offerDAO.list().pipeTo(sender)
+    case OfferServiceActor.ListOffers(account, lastID) =>
+      offerDAO.list(account, lastID).pipeTo(sender)
 
-    case OfferServiceActor.GetOffer(id) =>
-      // TODO - Don't think we need this anymore
-      val NUM_100NS_INTERVALS_SINCE_UUID_EPOCH = 0x01b21dd213814000L
-      val epoch = (id.timestamp() - NUM_100NS_INTERVALS_SINCE_UUID_EPOCH) / 10000
-      val date = new DateTime(epoch)
-      val fmt = DateTimeFormat.forPattern("YYYY-MM-dd")
-      val dateStr = fmt.print(date)
+    case OfferServiceActor.GetOffer(account, offerid) =>
+      offerDAO.get(account, offerid).pipeTo(sender)
 
-      offerDAO.get(id, dateStr).pipeTo(sender)
+    case OfferServiceActor.Participate(account, offerid) =>
+      offerDAO.participate(account, offerid).pipeTo(sender)
+
+    case OfferServiceActor.UnParticipate(account, offerid) =>
+      offerDAO.unparticipate(account, offerid).pipeTo(sender)
   }
 
 }
@@ -59,21 +61,39 @@ object OfferService {
 
 class OfferService private(actor: ActorRef) extends ActorWrapper(actor) {
 
-  def list()(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+  def list(account: Account, lastID: Int)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
     implicit val timeout = OfferService.ListTimeout
-    val futureResult = actor ? OfferServiceActor.ListOffers
+    val futureResult = actor ? OfferServiceActor.ListOffers(account, lastID)
 
     futureResult.map { result =>
       result.asInstanceOf[Seq[Offer]]
     }
   }
 
-  def get(id: UUID)(implicit ec: ExecutionContext): Future[Option[Offer]] = {
+  def get(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Offer]] = {
     implicit val timeout = OfferService.GetTimeout
-    val futureResult = actor ? OfferServiceActor.GetOffer(id)
+    val futureResult = actor ? OfferServiceActor.GetOffer(account, offerid)
 
     futureResult.map { result =>
       result.asInstanceOf[Option[Offer]]
+    }
+  }
+
+  def participate(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+    implicit val timeout = OfferService.GetTimeout
+    val futureResult = actor ? OfferServiceActor.Participate(account, offerid)
+
+    futureResult.map { result =>
+      result.asInstanceOf[Option[Boolean]]
+    }
+  }
+
+  def unparticipate(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+    implicit val timeout = OfferService.GetTimeout
+    val futureResult = actor ? OfferServiceActor.UnParticipate(account, offerid)
+
+    futureResult.map { result =>
+      result.asInstanceOf[Option[Boolean]]
     }
   }
 

@@ -20,10 +20,10 @@ libraryDependencies ++= {
   val scalazV = "7.1.3"
   val slickV = "3.1.1"
   val postgresV = "9.4.1207"
-  val postgresJodaV = "2.1.0"
   val jodaConvertV = "1.8"
   val jbcryptV = "0.3m"
   val slickJodaMapperV = "2.1.0"
+
 
   Seq(
     "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
@@ -34,7 +34,7 @@ libraryDependencies ++= {
     "com.typesafe.slick" %% "slick" % slickV,
     "com.typesafe.slick" %% "slick-hikaricp" % slickV,
     "org.postgresql" % "postgresql" % postgresV,
-    "com.github.tototoshi" %% "slick-joda-mapper" % postgresJodaV,
+    "com.github.tototoshi" %% "slick-joda-mapper" % slickJodaMapperV,
     "org.joda" % "joda-convert" % jodaConvertV,
     "org.mindrot" % "jbcrypt" % jbcryptV,
     "org.scalatest" %% "scalatest" % scalaTestV % "test",
@@ -44,6 +44,7 @@ libraryDependencies ++= {
     "org.scalaz" %% "scalaz-core" % scalazV,
     "com.websudos" %% "phantom-dsl" % phantomV,
     "com.github.tototoshi" %% "slick-joda-mapper" % slickJodaMapperV
+
   )
 }
 

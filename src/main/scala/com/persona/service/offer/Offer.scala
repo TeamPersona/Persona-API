@@ -1,25 +1,33 @@
 package com.persona.service.offer
 
-import java.util.UUID
-
-import com.persona.util.json.{DateTimeJsonProtocol, UuidJsonProtocol}
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import spray.json._
 
-import scala.concurrent.Future
+case class Offer(val offerID: Int,
+                 val partnerName: String,
+                 val partnerID: Int,
+                 val partnerImageUrl: String,
+                 val offerDetails: String,
+                 val offerStatus: Int,
+                 val offerMinRank: Option[Int],
+                 val offerMaxParticipants: Int,
+                 val offerStartDate: DateTime,
+                 val offerExpirationDate: DateTime,
+                 val offerReward: Double,
+                 val offerCurrentParticipants: Int,
+                 val offerType: List[String],
+                 val offerFilters: Map[String, List[Map[String, String]]],
+                 val offerInfoRequired: Map[String, List[Map[String, String]]],
+                 val isEligible: Boolean,
+                 val isParticipating: Boolean) {
 
-case class Offer(val id: UUID, // This is a timeUUID that has the exact time it was created
-                 creationDay: DateTime, // TODO: may have to change to string type/check to match Cassandra
-                 description: String,
-                 expirationTime: DateTime,
-                 currentParticipants: Int,
-                 maxParticipants: Int,
-                 value: Double,
-                 criteria: Map[String, String])
+  def this (offerBasicInfo: OfferBasicInfo, offerType: List[String], offerFilters: Map[String, List[Map[String, String]]], offerInfoRequired: Map[String, List[Map[String, String]]], isEligible: Boolean, isParticipating: Boolean) {
+    this (offerBasicInfo.offerID, offerBasicInfo.partnerName, offerBasicInfo.partnerID, offerBasicInfo.partnerImageUrl, offerBasicInfo.offerDetails, offerBasicInfo.offerStatus, offerBasicInfo.offerMinRank, offerBasicInfo.offerMaxParticipants, offerBasicInfo.offerStartDate, offerBasicInfo.offerExpirationDate, offerBasicInfo.offerReward, offerBasicInfo.offerCurrentParticipants, offerType, offerFilters, offerInfoRequired, isEligible, isParticipating)
+  }
+}
 
-trait OfferJsonProtocol extends DefaultJsonProtocol with UuidJsonProtocol with DateTimeJsonProtocol {
+trait OfferJsonProtocol extends DefaultJsonProtocol with OfferBasicInfoJsonProtocol {
 
-  implicit val dataItemJsonParser = jsonFormat8(Offer)
+  implicit val offerJsonParser = jsonFormat17(Offer.apply)
 
 }
