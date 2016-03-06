@@ -1,3 +1,6 @@
+DROP TABLE chat_offers;
+DROP TABLE msg_ack;
+DROP TABLE msg_history;
 DROP TABLE refresh_tokens;
 DROP TABLE authorization_codes;
 DROP TABLE third_party_accounts;

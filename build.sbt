@@ -23,6 +23,7 @@ libraryDependencies ++= {
   val postgresJodaV = "2.1.0"
   val jodaConvertV = "1.8"
   val jbcryptV = "0.3m"
+  val slickJodaMapperV = "2.1.0"
 
   Seq(
     "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
@@ -41,7 +42,8 @@ libraryDependencies ++= {
     "com.nimbusds" % "oauth2-oidc-sdk" % nimbusOAuth,
     "com.github.nscala-time" %% "nscala-time" % nscalaTimeV,
     "org.scalaz" %% "scalaz-core" % scalazV,
-    "com.websudos" %% "phantom-dsl" % phantomV
+    "com.websudos" %% "phantom-dsl" % phantomV,
+    "com.github.tototoshi" %% "slick-joda-mapper" % slickJodaMapperV
   )
 }
 
