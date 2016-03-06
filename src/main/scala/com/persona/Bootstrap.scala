@@ -20,6 +20,7 @@ import com.persona.service.authorization._
 import com.persona.service.bank._
 import com.persona.service.chat.ChatService
 import com.persona.service.offer.{PostgresOfferDataDAO, OfferService}
+import com.persona.service.chat.dao.ChatDAO
 import com.persona.util.security.SecureAlphanumericStringGenerator
 
 import com.typesafe.config.Config
@@ -101,14 +102,18 @@ class Bootstrap
   private[this] val offerDAO = new PostgresOfferDataDAO(db, bankDAO)
   private[this] val offerService = OfferService(offerDAO)
 
-  private[this] val chatService = new ChatService
+  private[this] val chatDAO = new ChatDAO(db)
+  private[this] val chatService = new ChatService(chatDAO)
+  chatService.initialize()
 
   private[this] val accountApi = new AccountApi(accountService, accountValidator, googleAccountService, authorizationService)
   private[this] val authenticationApi = new AuthenticationApi(authenticationService, googleAuthenticationService, accountService, authorizationService)
   private[this] val authorizationApi = new AuthorizationApi(authorizationService)
   private[this] val bankApi = new BankApi(bankService, authorizationService)
   private[this] val offerApi = new OfferApi(offerService, authorizationService)
-  private[this] val chatApi = new ChatApi(chatService)
+  private[this] val chatIdleTimeout = personaConfig.getInt("chat_idle_timeout")
+  private[this] val chatApi = new ChatApi(chatService, authorizationService, chatIdleTimeout)
+
 
   val routes = {
     accountApi.route ~

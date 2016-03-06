@@ -3,28 +3,28 @@ package com.persona.service.chat
 import java.util.UUID
 
 import akka.actor.{Props, ActorRef, Actor}
+import com.persona.service.chat.dao.ChatDAO
+import org.joda.time.DateTime
 
-class ChatRoomActor(offerId: UUID) extends Actor {
+class ChatRoomActor(offerId: UUID, chatDAO: ChatDAO) extends Actor {
 
   var participants = Map.empty[String, ActorRef]
   var supports = Map.empty[String, ActorRef]
 
-  val dbWorker = context.actorOf(Props[ChatStorageActor])
+  val dbWorker = context.actorOf(Props(classOf[ChatStorageActor], chatDAO))
 
   override def receive = {
-    case Connect(user, ref) =>
+    case Connect(user, timestamp, ref) =>
       userType(user) match {
         case UserType.Consumer =>
           participants += user -> ref
-          supports.values.foreach(_ ! ChatMessage(user, " Joined"))
           dbWorker ! FetchHistory(offerId, user)
-          dbWorker ! PersistMsg(offerId, user, ChatMessage(user, " Joined"))
 
         case UserType.Partner =>
           supports += user -> ref
       }
 
-    case Disconnect(user) =>
+    case Disconnect(user, timestamp) =>
       userType(user) match {
         case UserType.Consumer =>
           participants -= user
@@ -32,9 +32,10 @@ class ChatRoomActor(offerId: UUID) extends Actor {
           supports -= user
       }
 
-    case ack: AckMessage =>
-      dbWorker ! PersistMsg(offerId, ack.user, ChatMessage(ack.user, " Seen"))
-      supports.values.foreach(_ ! ChatMessage(ack.user, " Seen"));
+    case AckMessage(user) =>
+      val timestamp = new DateTime
+      dbWorker ! PersistAckMsg(offerId, user, timestamp)
+      supports.values.foreach(_ ! ChatMessage(user, "Seen", timestamp));
 
     case msg: ChatMessage =>
       if(userType(msg.user) == UserType.Partner) {
@@ -44,8 +45,8 @@ class ChatRoomActor(offerId: UUID) extends Actor {
       dbWorker ! PersistMsg(offerId, msg.user, msg)
 
     case msg: HistoryMessage =>
-      printf("History: User: %s, Msg: %s\n", msg.user, msg.msg)
       participants.get(msg.user).get ! msg.msg
+
   }
 
   /*
