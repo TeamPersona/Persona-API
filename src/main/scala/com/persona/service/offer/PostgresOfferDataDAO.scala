@@ -168,7 +168,6 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
 
   def createIsMissing(filters: List[(String, String)], has: List[Boolean]) : List[(String, (String, Boolean))] = {
     // has() is if the information is there, but we need if it is missing
-
     val filtersMissing = filters.zip(has.map(hasinfo => !hasinfo))
     filtersMissing.map { filter =>
       (filter._1._1, (filter._1._2, filter._2))
