@@ -60,10 +60,11 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
       obi <- offerBasicInfo
       of <- getFilters(obi.get.offerID)
       ori <- getRequiredInfo(obi.get.offerID)
+      omp <- getHasPoints(account,obi.get.offerID)
       ofm <- cassandraBankDAO.has(account, of.toList)
       orim <- cassandraBankDAO.has(account, ori.toList)
     } yield {
-      val eligible = isEligible(createIsMissing(of.toList, ofm).map(missing => !missing._2._2), createIsMissing(ori.toList, orim).map(missing => !missing._2._2))
+      val eligible = isEligible(createIsMissing(of.toList, ofm).map(missing => !missing._2._2), createIsMissing(ori.toList, orim).map(missing => !missing._2._2), omp.getOrElse(false))
       if (eligible) {
         val action = sql"SELECT public.participate(#$offerid,#${account.id});".as[(Boolean)].headOption
         db.run(action)
@@ -115,22 +116,30 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
     db.run(action)
   }
 
+  private def getHasPoints(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]] = {
+    val userID = account.id
+    val action = sql"SELECT public.haspoints(#$offerid,#$userID);".as[(Boolean)].headOption
+    db.run(action)
+  }
+
 
   def createOffer(account: Account, offerBasicInfo: OfferBasicInfo)(implicit ec: ExecutionContext) : Future[Offer] =  {
     val offerTypes = getTypes(offerBasicInfo.offerID)
     val offerFilters = getFilters(offerBasicInfo.offerID)
     val offerRequiredInfo = getRequiredInfo(offerBasicInfo.offerID)
     val offerParticipating = getParticipating(account, offerBasicInfo.offerID)
+    val hasPoints = getHasPoints(account, offerBasicInfo.offerID)
 
     for {
       ot <- offerTypes
       of <- offerFilters
       ori <- offerRequiredInfo
       op <- offerParticipating
+      omp <- hasPoints
 
       ofm <- cassandraBankDAO.has(account, of.toList)
       orim <- cassandraBankDAO.has(account, ori.toList)
-    } yield generateOffer(offerBasicInfo, ot, createIsMissing(of.toList, ofm), createIsMissing(ori.toList, orim), isEligible(ofm, orim), op.getOrElse(false), account)
+    } yield generateOffer(offerBasicInfo, ot, createIsMissing(of.toList, ofm), createIsMissing(ori.toList, orim), isEligible(ofm, orim, omp.getOrElse(false)), op.getOrElse(false), account)
 
   }
 
@@ -174,8 +183,8 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
     }
   }
 
-  private def isEligible (filters: List[Boolean], required: List[Boolean])(implicit ec: ExecutionContext): Boolean = {
-    !filters.contains(false) && !required.contains(false)
+  private def isEligible (filters: List[Boolean], required: List[Boolean], hasPoints: Boolean)(implicit ec: ExecutionContext): Boolean = {
+    !filters.contains(false) && !required.contains(false) && hasPoints
   }
 
 }
