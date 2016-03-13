@@ -238,3 +238,7 @@ SELECT public.createoffer(
     'Home Address'
 );
 
+INSERT INTO public.demo_message(offerid, message, timestamp)
+VALUES
+    (1, 'Please call 1-XXX-XXX-XXXX to redeem your coupon.', '2016-03-12 21:00:05.539000');
+
