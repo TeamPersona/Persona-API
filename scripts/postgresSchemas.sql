@@ -21,6 +21,13 @@ CREATE TABLE IF NOT EXISTS google_accounts
     google_id TEXT UNIQUE
 );
 
+CREATE TABLE IF NOT EXISTS demo_message
+(
+    offerid INT PRIMARY KEY
+    message TEXT,
+    timestamp TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS msg_history
 (
     msg_id SERIAL PRIMARY KEY,
