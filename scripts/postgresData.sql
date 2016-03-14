@@ -230,11 +230,13 @@ SELECT public.createoffer(
     '2016-04-15 12:00:00',
     '2016-05-15 12:00:00',
     2.5,
-    1,
+    3,
     1,
     'Get cheap flights.',
     'Travel & Transportation,Transportation',
     'Salary,Favourite Sports Teams',
     'Home Address'
 );
+
+--INSERT INTO public.offerparticipation(offerid, userid) VALUES (1, 1), (2,1);
 

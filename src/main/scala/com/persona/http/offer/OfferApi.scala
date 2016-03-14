@@ -77,6 +77,54 @@ class OfferApi(offerService: OfferService, authorizationService: AuthorizationSe
               }
             }
           } ~
+          pathPrefix("recommended") {
+              oauth2Token { token =>
+                onComplete(authorizationService.validate(token)) {
+                  case Success(Some((account, _))) =>
+                    onComplete(offerService.getRecommended(account)) {
+                      case Success(successful) => complete(StatusCodes.OK, successful.toJson)
+                      case Failure(e) => complete(StatusCodes.InternalServerError)
+                    }
+                  case Success(None) =>
+                    complete(StatusCodes.BadRequest)
+
+                  case Failure(e) =>
+                    complete(StatusCodes.InternalServerError)
+                }
+              }
+          } ~
+          pathPrefix("pending") {
+            oauth2Token { token =>
+              onComplete(authorizationService.validate(token)) {
+                case Success(Some((account, _))) =>
+                  onComplete(offerService.getPending(account)) {
+                    case Success(successful) => complete(StatusCodes.OK, successful.toJson)
+                    case Failure(e) => complete(StatusCodes.InternalServerError)
+                  }
+                case Success(None) =>
+                  complete(StatusCodes.BadRequest)
+
+                case Failure(e) =>
+                  complete(StatusCodes.InternalServerError)
+              }
+            }
+          } ~
+          pathPrefix("completed") {
+            oauth2Token { token =>
+              onComplete(authorizationService.validate(token)) {
+                case Success(Some((account, _))) =>
+                  onComplete(offerService.getCompleted(account)) {
+                    case Success(successful) => complete(StatusCodes.OK, successful.toJson)
+                    case Failure(e) => complete(StatusCodes.InternalServerError)
+                  }
+                case Success(None) =>
+                  complete(StatusCodes.BadRequest)
+
+                case Failure(e) =>
+                  complete(StatusCodes.InternalServerError)
+              }
+            }
+          } ~
         path(IntNumber) { id =>
           oauth2Token { token =>
             onComplete(authorizationService.validate(token)) {

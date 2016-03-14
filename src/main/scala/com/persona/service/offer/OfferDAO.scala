@@ -10,4 +10,8 @@ trait OfferDAO {
   def get(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Offer]]
   def participate(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]]
   def unparticipate(account: Account, offerid: Int)(implicit ec: ExecutionContext): Future[Option[Boolean]]
+  def getRecommended(account: Account)(implicit ec: ExecutionContext): Future[Seq[Offer]]
+  def getPending(account: Account)(implicit ec: ExecutionContext): Future[Seq[Offer]]
+  def getCompleted(account: Account)(implicit ec: ExecutionContext): Future[Seq[Offer]]
+
 }
