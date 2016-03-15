@@ -213,10 +213,10 @@ INSERT INTO public.pifields(pifield, pivaluetypeid, picategoryid)
 INSERT INTO public.offercriteriontypes(offercriteriontype, offercriterionsql) VALUES ('>', '>'), ('<', '<'), ('=', '='), ('Exists', 'is not null');
 
 
-SELECT public.createoffer(6,10,'2016-03-11','2016-03-18',2,4,1,'Samsung 55" 1010P LED SMART TV. Save $295!','Computers & Electronics','Email Address','Date of Birth,Salary,Home Address');	
+SELECT public.createoffer(6,10,'2016-03-11','2016-03-18',2,4,1,'Samsung 55" 1080P LED SMART TV. Save $295!','Computers & Electronics','Email Address','Date of Birth,Salary,Home Address');	
 SELECT public.createoffer(2,5,'2016-03-13','2016-03-17',1.5,4,1,'Go watch your favourite sports teams on the road!','Travel & Transportation','Travel History','Favourite Sports Teams,Salary');	
 SELECT public.createoffer(10,100,'2016-03-10','2016-03-31',1,4,0,'Get 20% off Pampers Cruisers (Membership is required)','Wholesale','Number of Dependents','Date of Birth,Number of Dependents');	
-SELECT public.createoffer(16,2,'2016-03-13','2016-03-15',10,4,2,'We want to know about your workplace environment.','Computers & Electronics','Current Employer,Date of Birth,Salary,Email Address,Workplace OS','');	
+SELECT public.createoffer(16,2,'2016-03-13','2016-03-18',10,4,2,'We want to know about your workplace environment.','Computers & Electronics','Current Employer,Date of Birth,Salary,Email Address,Workplace OS','');	
 SELECT public.createoffer(1,13,'2016-03-14','2016-03-27',0.5,3,1,'BMW is looking for the next new drivers for our i8 model - the most progressive sports car. The BMW i8 is ready to revolutionise its vehicle class.','Automotive','Allow Contact,Home Address','Date of Birth,Salary,Marital Status');	
 SELECT public.createoffer(9,200,'2016-03-10','2016-03-30',0.25,4,0,'BOGO movie tickets','Entertainment','Movie Interests','');	
 SELECT public.createoffer(5,50,'2016-03-14','2016-03-28',3.5,4,1,'Get ready for beach season!','Fitness','Height,Weight','Date of Birth,Gender');
@@ -226,4 +226,3 @@ INSERT INTO public.demo_message(offerid, message, timestamp)
 VALUES
     (5, 'Please call 1-XXX-XXX-XXXX to book an appointment for your test drive', '2016-03-12 21:00:05.539000');
 
---INSERT INTO public.offerparticipation(offerid, userid) VALUES (5, 1), (6,1),(7,1);
