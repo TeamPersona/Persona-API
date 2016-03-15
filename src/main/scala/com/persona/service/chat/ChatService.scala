@@ -7,11 +7,10 @@ import akka.http.scaladsl.model.ws.TextMessage
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
-import com.persona.service.chat.dao.ChatDAO
+import com.persona.service.chat.dao.{DemoJsonParser, ChatDAO}
 import scala.concurrent.duration._
-import scala.util.{Success, Failure}
 
-class ChatService(dataAccess: ChatDAO)(implicit actorSystem: ActorSystem, materializer: Materializer) {
+class ChatService(dataAccess: ChatDAO)(implicit actorSystem: ActorSystem, materializer: Materializer) extends DemoJsonParser {
 
   implicit val chatDAO = dataAccess
 

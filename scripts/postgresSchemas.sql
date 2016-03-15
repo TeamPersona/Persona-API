@@ -21,6 +21,13 @@ CREATE TABLE IF NOT EXISTS google_accounts
     google_id TEXT UNIQUE
 );
 
+CREATE TABLE IF NOT EXISTS demo_message
+(
+    offerid INT PRIMARY KEY,
+    message TEXT,
+    timestamp TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS msg_history
 (
     msg_id SERIAL PRIMARY KEY,
@@ -330,6 +337,17 @@ CREATE OR REPLACE VIEW public.view_offercriteria AS
             count(*) AS numparticipants
            FROM offerparticipation
           GROUP BY offerparticipation.offerid) participants ON offers.offerid = participants.offerid;
+
+
+CREATE OR REPLACE VIEW public.view_demomessage AS 
+  SELECT offers.offerid,
+    partners.partnername,
+    partners.partnerimageurl,
+    demo_message.message,
+    demo_message.timestamp
+  FROM demo_message
+    JOIN offers ON demo_message.offerid = offers.offerid
+    JOIN partners ON offers.partnerid = partners.partnerid;
 
 
 CREATE OR REPLACE FUNCTION public.haspoints(

@@ -2,11 +2,15 @@ package com.persona.service.chat.dao
 
 import java.util.UUID
 
+import com.persona.util.json.{DateTimeJsonProtocol, UuidJsonProtocol}
 import org.joda.time.DateTime
 import slick.driver.PostgresDriver.api._
 
 import com.github.tototoshi.slick.PostgresJodaSupport._
 import com.persona.service.chat.ChatMessage
+import spray.json.DefaultJsonProtocol
+
+import scala.concurrent.Future
 
 case class MsgHistory(
                        msgId: Int,
@@ -22,6 +26,21 @@ case class MsgAck(
                      userId: String,
                      timestamp: DateTime
                      )
+
+case class DemoMessage(
+                      offerId: Option[Int],
+                      partnername: String,
+                      partnerimageurl: String,
+                      msg: String,
+                      timestamp: DateTime
+                      )
+
+trait DemoJsonParser extends DefaultJsonProtocol with UuidJsonProtocol with DateTimeJsonProtocol {
+
+  implicit val demoJsonParser = jsonFormat5(DemoMessage)
+
+}
+
 
 class MsgHistoryTable(tag: Tag) extends Table[MsgHistory](tag, "msg_history") {
 
@@ -62,11 +81,24 @@ class ChatOfferTable(tag: Tag) extends Table[UUID](tag, "chat_offers") {
 
 }
 
+class DemoMessageTable(tag: Tag) extends Table[DemoMessage](tag, "view_demomessage") {
+
+  def offerId = column[Option[Int]]("offerid", O.PrimaryKey)
+  def partnername = column[String]("partnername")
+  def partnerimageurl = column[String]("partnerimageurl")
+  def message = column[String]("message")
+  def timestamp = column[DateTime]("timestamp")
+
+  override def * = (offerId, partnername, partnerimageurl, message, timestamp) <> (DemoMessage.tupled, DemoMessage.unapply)
+
+}
+
 class ChatDAO(db: Database) {
 
   private[this] val msgHistory = TableQuery[MsgHistoryTable]
   private[this] val msgAck = TableQuery[MessageAcksTable]
   private[this] val chatOffer = TableQuery[ChatOfferTable]
+  private[this] val demoQuery = TableQuery[DemoMessageTable]
 
   def fetchMsgHistory(offerId: UUID, userid: String) = {
     val validUsers = List(userid, "support")
@@ -94,6 +126,16 @@ class ChatDAO(db: Database) {
 
   def createRoom(offerId: UUID) = {
     val query = chatOffer += offerId
+    db.run(query)
+  }
+
+  def demoGetMessage(offerId: Int) = {
+    val query = demoQuery.filter(_.offerId === offerId).result.headOption
+    db.run(query)
+  }
+
+  def getAllDemoMessage(): Future[Seq[DemoMessage]] = {
+    val query = demoQuery.result
     db.run(query)
   }
 
