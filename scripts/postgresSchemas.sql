@@ -339,6 +339,17 @@ CREATE OR REPLACE VIEW public.view_offercriteria AS
           GROUP BY offerparticipation.offerid) participants ON offers.offerid = participants.offerid;
 
 
+CREATE OR REPLACE VIEW public.view_demomessage AS 
+  SELECT offers.offerid,
+    partners.partnername,
+    partners.partnerimageurl,
+    demo_message.message,
+    demo_message.timestamp
+  FROM demo_message
+    JOIN offers ON demo_message.offerid = offers.offerid
+    JOIN partners ON offers.partnerid = partners.partnerid;
+
+
 CREATE OR REPLACE FUNCTION public.haspoints(
     offeridin bigint,
     useridin bigint)

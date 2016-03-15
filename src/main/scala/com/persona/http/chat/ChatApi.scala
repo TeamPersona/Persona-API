@@ -9,6 +9,7 @@ import com.persona.http.PersonaOAuth2Utils
 import com.persona.service.authorization.AuthorizationService
 import com.persona.service.chat.ChatService
 import com.persona.service.chat.dao.DemoJsonParser
+import com.persona.service.offer.OfferService
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -16,7 +17,7 @@ import scala.util.{Failure, Success}
 
 import spray.json._
 
-class ChatApi(chatService: ChatService, authorizationService: AuthorizationService, idleTimeout: Int)(implicit ec: ExecutionContext)
+class ChatApi(chatService: ChatService, offerService: OfferService, authorizationService: AuthorizationService, idleTimeout: Int)(implicit ec: ExecutionContext)
   extends PersonaOAuth2Utils with DemoJsonParser with SprayJsonSupport {
 
   val route = get {

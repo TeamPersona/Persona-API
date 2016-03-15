@@ -112,7 +112,7 @@ class Bootstrap
   private[this] val bankApi = new BankApi(bankService, authorizationService)
   private[this] val offerApi = new OfferApi(offerService, authorizationService)
   private[this] val chatIdleTimeout = personaConfig.getInt("chat_idle_timeout")
-  private[this] val chatApi = new ChatApi(chatService, authorizationService, chatIdleTimeout)
+  private[this] val chatApi = new ChatApi(chatService, offerService, authorizationService, chatIdleTimeout)
 
 
   val routes = {

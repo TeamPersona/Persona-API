@@ -29,13 +29,15 @@ case class MsgAck(
 
 case class DemoMessage(
                       offerId: Option[Int],
+                      partnername: String,
+                      partnerimageurl: String,
                       msg: String,
                       timestamp: DateTime
                       )
 
 trait DemoJsonParser extends DefaultJsonProtocol with UuidJsonProtocol with DateTimeJsonProtocol {
 
-  implicit val demoJsonParser = jsonFormat3(DemoMessage)
+  implicit val demoJsonParser = jsonFormat5(DemoMessage)
 
 }
 
@@ -79,13 +81,15 @@ class ChatOfferTable(tag: Tag) extends Table[UUID](tag, "chat_offers") {
 
 }
 
-class DemoMessageTable(tag: Tag) extends Table[DemoMessage](tag, "demo_message") {
+class DemoMessageTable(tag: Tag) extends Table[DemoMessage](tag, "view_demomessage") {
 
   def offerId = column[Option[Int]]("offerid", O.PrimaryKey)
+  def partnername = column[String]("partnername")
+  def partnerimageurl = column[String]("partnerimageurl")
   def message = column[String]("message")
   def timestamp = column[DateTime]("timestamp")
 
-  override def * = (offerId, message, timestamp) <> (DemoMessage.tupled, DemoMessage.unapply)
+  override def * = (offerId, partnername, partnerimageurl, message, timestamp) <> (DemoMessage.tupled, DemoMessage.unapply)
 
 }
 
