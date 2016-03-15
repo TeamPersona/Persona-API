@@ -1,0 +1,12 @@
+{
+    "category": "Basic",
+    "subcategory": "Email Address",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Email Address", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}

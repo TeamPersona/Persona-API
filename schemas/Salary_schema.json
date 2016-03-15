@@ -1,0 +1,12 @@
+{
+    "category": "Financial",
+    "subcategory": "Salary",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Salary", 
+            "required":true,
+            "type":"int"
+        }
+    ]
+}

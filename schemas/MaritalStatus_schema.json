@@ -1,0 +1,12 @@
+{
+    "category": "Personal",
+    "subcategory": "Marital Status",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Marital Status", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}

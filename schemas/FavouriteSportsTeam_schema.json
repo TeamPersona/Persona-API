@@ -1,0 +1,12 @@
+{
+    "category": "Entertainment",
+    "subcategory": "Favourite Sports Teams",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Favourite Baseball Team", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}

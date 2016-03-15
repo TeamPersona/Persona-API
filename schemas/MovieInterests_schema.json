@@ -1,0 +1,12 @@
+{
+    "category": "Entertainment",
+    "subcategory": "Movie Interests",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Movie Category", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}
