@@ -30,7 +30,7 @@ case class MsgAck(
 case class DemoMessage(
                       offerId: Option[Int],
                       partnerName: String,
-                      partnerImageURL: String,
+                      partnerImageUrl: String,
                       msg: String,
                       timestamp: DateTime
                       )
