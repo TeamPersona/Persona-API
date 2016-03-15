@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import com.persona.http.PersonaOAuth2Utils
 import com.persona.service.authorization.AuthorizationService
 import com.persona.service.chat.ChatService
-import com.persona.service.chat.dao.{DemoMessage, DemoJsonParser}
+import com.persona.service.chat.dao.DemoJsonParser
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -19,27 +19,33 @@ class ChatApi(chatService: ChatService, authorizationService: AuthorizationServi
   extends PersonaOAuth2Utils with DemoJsonParser {
 
   val route = get {
-    pathPrefix("chat" / IntNumber) { offerId =>
+    pathPrefix("chat") {
       pathEndOrSingleSlash {
         oauth2Token { token =>
-          onComplete(chatService.chatDAO.demoGetMessage(offerId)) {
-            case Success(Some(msg)) =>
-              complete(DemoMessage(None, msg.msg, msg.timestamp).toJson.compactPrint)
+          onComplete(authorizationService.validate(token)) {
+            case Success(Some((account, _))) => {
+              onComplete(chatService.chatDAO.getAllDemoMessage()) {
+                case Success(msgs) =>
+                  complete(StatusCodes.OK, msgs.toJson.compactPrint)
 
+                case Failure(e) =>
+                  complete(StatusCodes.InternalServerError)
+
+              }
+            }
             case Success(None) =>
-              complete(StatusCodes.NotFound)
+              complete(StatusCodes.BadRequest)
 
             case Failure(e) =>
               complete(StatusCodes.InternalServerError)
-
           }
         }
+        //      path("create") {
+        //        chatService.createRoom(offerId)
+        //        complete(StatusCodes.OK)
+        //      }
       }
-//      path("create") {
-//        chatService.createRoom(offerId)
-//        complete(StatusCodes.OK)
-//      }
     }
-  }
 
+  }
 }

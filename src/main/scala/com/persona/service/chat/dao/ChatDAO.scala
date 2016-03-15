@@ -10,6 +10,8 @@ import com.github.tototoshi.slick.PostgresJodaSupport._
 import com.persona.service.chat.ChatMessage
 import spray.json.DefaultJsonProtocol
 
+import scala.concurrent.Future
+
 case class MsgHistory(
                        msgId: Int,
                        offerId: UUID,
@@ -125,6 +127,11 @@ class ChatDAO(db: Database) {
 
   def demoGetMessage(offerId: Int) = {
     val query = demoQuery.filter(_.offerId === offerId).result.headOption
+    db.run(query)
+  }
+
+  def getAllDemoMessage(): Future[Seq[DemoMessage]] = {
+    val query = demoQuery.result
     db.run(query)
   }
 
