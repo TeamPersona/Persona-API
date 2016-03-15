@@ -2,7 +2,7 @@ package com.persona.service.chat.dao
 
 import java.util.UUID
 
-import com.persona.util.json.{DateTimeJsonProtocol, UuidJsonProtocol}
+import com.persona.util.json.{DateTimeSecondsJsonProtocol, DateTimeJsonProtocol, UuidJsonProtocol}
 import org.joda.time.DateTime
 import slick.driver.PostgresDriver.api._
 
@@ -35,7 +35,7 @@ case class DemoMessage(
                       timestamp: DateTime
                       )
 
-trait DemoJsonParser extends DefaultJsonProtocol with UuidJsonProtocol with DateTimeJsonProtocol {
+trait DemoJsonParser extends DefaultJsonProtocol with UuidJsonProtocol with DateTimeSecondsJsonProtocol {
 
   implicit val demoJsonParser = jsonFormat5(DemoMessage)
 
