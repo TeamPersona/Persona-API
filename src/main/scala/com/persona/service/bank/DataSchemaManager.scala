@@ -14,10 +14,10 @@ class DataSchemaManager(dataSchemaLoader: DataSchemaLoader) {
     val dataSchemas = dataSchemaLoader.load()
 
     val groupedSchemas = dataSchemas.map { dataSchema =>
-      dataSchema.category -> Map(dataSchema.subcategory -> dataSchema)
+      (dataSchema.category, (dataSchema.subcategory, dataSchema))
     }
 
-    groupedSchemas.toMap
+    groupedSchemas.groupBy(_._1).mapValues(_.map(_._2).toMap)
   }
 
 }

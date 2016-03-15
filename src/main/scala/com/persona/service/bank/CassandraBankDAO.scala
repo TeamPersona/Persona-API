@@ -24,7 +24,7 @@ class CassandraBankDAO(dataItemsDAO: DataItemsDAO, dataCountsDAO: DataCountsDAO)
 
   def has(account: Account, data: List[(String, String)])(implicit ec: ExecutionContext): Future[List[Boolean]] = {
     dataCountsDAO.counts(account, data).map { countsList =>
-      val counts = countsList.map(count => count.category -> Map(count.subcategory -> count)).toMap
+      val counts = countsList.map(count => (count.category, (count.subcategory, count))).groupBy(_._1).mapValues(_.map(_._2).toMap)
 
       val results = data.par.map { item =>
         val (category, subcategory) = item

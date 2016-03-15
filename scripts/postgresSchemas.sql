@@ -485,7 +485,7 @@ return query
   SELECT CASE WHEN part >= 1 THEN TRUE ELSE FALSE END 
   FROM (SELECT COUNT(*) as part 
   FROM offerparticipation 
-  WHERE offerid = offerid
+  WHERE offerid = offeridin
   AND userid = useridin) as participating;
 
 END;
