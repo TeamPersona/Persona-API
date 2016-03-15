@@ -1,0 +1,12 @@
+{
+    "category": "Health & Fitness",
+    "subcategory": "Weight",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Weight", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}

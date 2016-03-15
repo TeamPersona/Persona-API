@@ -1,0 +1,28 @@
+{
+    "category": "Basic",
+    "subcategory": "Home Address",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Street Address", 
+            "required":true,
+            "type":"string"
+        },
+        {
+            "name":"City", 
+            "required":true,
+            "type":"string"
+        },
+        {
+            "name":"Province", 
+            "required":true,
+            "type":"string"
+        },
+        {
+            "name":"Postal Code", 
+            "required":true,
+            "type":"string"
+        }
+
+    ]
+}

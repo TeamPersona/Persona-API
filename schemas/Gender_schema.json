@@ -1,0 +1,12 @@
+{
+    "category": "Basic",
+    "subcategory": "Gender",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Gender", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}

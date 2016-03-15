@@ -1,0 +1,12 @@
+{
+    "category": "Basic",
+    "subcategory": "Phone Number",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Phone Number", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}

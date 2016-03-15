@@ -1,0 +1,12 @@
+{
+    "category": "Health & Fitness",
+    "subcategory": "Height",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Height", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "category": "Basic",
+    "subcategory": "Date of Birth",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Day", 
+            "required":true,
+            "type":"int"
+        },
+        {
+            "name":"Month", 
+            "required":true,
+            "type":"string"
+        },
+        {
+            "name":"Year", 
+            "required":true,
+            "type":"int"
+        }
+    ]
+}

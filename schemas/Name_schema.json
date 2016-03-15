@@ -1,0 +1,17 @@
+{
+    "category": "Basic",
+    "subcategory": "Name",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"First Name", 
+            "required":true,
+            "type":"string"
+        },
+        {
+            "name":"Last Name", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}

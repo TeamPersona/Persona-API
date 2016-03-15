@@ -1,0 +1,12 @@
+{
+    "category": "Personal",
+    "subcategory": "Current Employer",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Current Employer", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}

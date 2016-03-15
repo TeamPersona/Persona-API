@@ -1,0 +1,12 @@
+{
+    "category": "Basic",
+    "subcategory": "Allow Contact",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Allow Contact", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}

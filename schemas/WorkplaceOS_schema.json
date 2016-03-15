@@ -1,0 +1,12 @@
+{
+    "category": "Personal",
+    "subcategory": "Workplace OS",
+    "rewardPoints": 50,
+    "fields": [
+        {
+            "name":"Operating System", 
+            "required":true,
+            "type":"string"
+        }
+    ]
+}
