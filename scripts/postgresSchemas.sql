@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS google_accounts
 
 CREATE TABLE IF NOT EXISTS demo_message
 (
-    offerid INT PRIMARY KEY
+    offerid INT PRIMARY KEY,
     message TEXT,
     timestamp TIMESTAMP
 );
