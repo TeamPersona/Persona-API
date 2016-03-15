@@ -619,7 +619,7 @@ $BODY$
 DECLARE 
 BEGIN
 return query
-SELECT offerid FROM offers WHERE offers.offerid IN (1,2);
+SELECT offerid FROM offers WHERE offers.offerid IN (1,2,3,4);
 END;
 $BODY$
   LANGUAGE plpgsql VOLATILE;
