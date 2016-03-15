@@ -224,6 +224,6 @@ SELECT public.createoffer(5,50,'2016-03-14','2016-03-28',3.5,4,1,'Get ready for 
 
 INSERT INTO public.demo_message(offerid, message, timestamp)
 VALUES
-    (1, 'Please call 1-XXX-XXX-XXXX to redeem your coupon.', '2016-03-12 21:00:05.539000');
+    (5, 'Please call 1-XXX-XXX-XXXX to book an appointment for your test drive', '2016-03-12 21:00:05.539000');
 
 --INSERT INTO public.offerparticipation(offerid, userid) VALUES (5, 1), (6,1),(7,1);
