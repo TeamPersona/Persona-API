@@ -34,26 +34,27 @@ INSERT INTO public.pivaluetypes(pivaluetype) VALUES ('String'), ('Integer'), ('F
 INSERT INTO public.picategory(category) VALUES ('Basic'), ('Personal'), ('Financial'), ('Employment'), ('Health & Fitness'), ('Entertainment'), ('Social');
 
 INSERT INTO public.pifields(pifield, pivaluetypeid, picategoryid)
-    VALUES ('First Name', 1, 1)
-	,('Last Name', 1, 1)
+    VALUES ('Name', 1, 1)
 	,('Date of Birth', 1, 1)
 	,('Gender', 1, 1)
 	,('Ethnicity', 1, 1)
 	,('Home Address', 1, 1)
 	,('Allow Contact', 1, 1)
+	,('Email Address', 1, 1)
 
 	,('Education', 1, 2)
 	,('Marital Status', 1, 2)
 	,('Number of Dependents', 1, 2)
 	,('Political Affiliations', 1, 2)
 	,('Religion', 1, 2)
+	,('Travel History', 1, 2)
 
 	,('Salary', 1, 3)
 	,('Purchase History', 1, 3)
 	,('Credit Score', 1, 3)
-
-	,('Current Employer', 1, 4)
-	,('Employment History', 1, 4)
+	,('Current Employer', 1, 3)
+	,('Employment History', 1, 3)
+	,('Workplace OS', 1, 3)
 
 	,('Height', 1, 5)
 	,('Weight', 1, 5)
@@ -101,6 +102,7 @@ INSERT INTO public.pifields(pifield, pivaluetypeid, picategoryid)
 ,('Office Supplies')
 ,('Printing & Publishing')
 ,('Computers & Electronics')
+,('Appliances')
 ,('Computer Programming & Support')
 ,('Consumer Electronics & Accessories')
 ,('Construction & Contractors')
@@ -139,6 +141,7 @@ INSERT INTO public.pifields(pifield, pivaluetypeid, picategoryid)
 ,('Laboratory')
 ,('Massage Therapy')
 ,('Mental Health')
+,('Fitness')
 ,('Nurse')
 ,('Optical')
 ,('Pharmacy')
@@ -209,36 +212,12 @@ INSERT INTO public.pifields(pifield, pivaluetypeid, picategoryid)
 
 INSERT INTO public.offercriteriontypes(offercriteriontype, offercriterionsql) VALUES ('>', '>'), ('<', '<'), ('=', '='), ('Exists', 'is not null');
 
-SELECT public.createoffer(
-    1,
-    10,
-    '2016-03-15 12:00:00',
-    '2016-04-15 12:00:00',
-    3,
-    4,
-    0,
-    'BMW is looking for the next new drivers for our i8 model - the most progressive sports car. The BMW i8 is ready to revolutionise its vehicle class.',
-    'Auto Dealers – New',
-    'Salary,Credit Score',
-    'Home Address'
-);
 
+SELECT public.createoffer(6,10,'2016-03-11','2016-03-18',2,4,1,'Samsung 55" 1010P LED SMART TV. Save $295!','Computers & Electronics','Email Address','Date of Birth,Salary,Home Address');	SELECT public.createoffer(2,5,'2016-03-13','2016-03-17',1.5,4,1,'Go watch your favourite sports teams on the road!','Travel & Transportation','Travel History','Favourite Sports Teams,Salary');	SELECT public.createoffer(10,100,'2016-03-10','2016-03-31',1,4,0,'Get 20% off Pampers Cruisers (Membership is required)','Wholesale','Number of Dependents','Date of Birth,Number of Dependents');	SELECT public.createoffer(16,2,'2016-03-13','2016-03-15',10,4,2,'We want to know about your workplace environment.','Computers & Electronics','Current Employer,Date of Birth,Salary,Email Address,Workplace OS','');	SELECT public.createoffer(1,13,'2016-03-14','2016-03-27',0.5,3,1,'BMW is looking for the next new drivers for our i8 model - the most progressive sports car. The BMW i8 is ready to revolutionise its vehicle class.','Automotive','Allow Contact,Home Address','Date of Birth,Salary,Marital Status');	SELECT public.createoffer(9,200,'2016-03-10','2016-03-30',0.25,4,0,'BOGO movie tickets','Entertainment','Movie Interests','');	SELECT public.createoffer(5,50,'2016-03-14','2016-03-28',3.5,4,1,'Get ready for beach season!','Fitness','Height,Weight','Date of Birth,Gender');
 
-SELECT public.createoffer(
-    2,
-    5,
-    '2016-04-15 12:00:00',
-    '2016-05-15 12:00:00',
-    2.5,
-    1,
-    1,
-    'Get cheap flights.',
-    'Travel & Transportation,Transportation',
-    'Salary,Favourite Sports Teams',
-    'Home Address'
-);
 
 INSERT INTO public.demo_message(offerid, message, timestamp)
 VALUES
     (1, 'Please call 1-XXX-XXX-XXXX to redeem your coupon.', '2016-03-12 21:00:05.539000');
 
+--INSERT INTO public.offerparticipation(offerid, userid) VALUES (5, 1), (6,1),(7,1);

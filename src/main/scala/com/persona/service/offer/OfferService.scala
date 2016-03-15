@@ -19,6 +19,9 @@ private object OfferServiceActor {
   case class GetOffer(account: Account, offerid: Int)
   case class Participate(account: Account, offerid: Int)
   case class UnParticipate(account: Account, offerid: Int)
+  case class getRecommended(account: Account)
+  case class getPending(account: Account)
+  case class getCompleted(account: Account)
 
 }
 
@@ -38,6 +41,15 @@ private class OfferServiceActor(offerDAO: OfferDAO) extends Actor {
 
     case OfferServiceActor.UnParticipate(account, offerid) =>
       offerDAO.unparticipate(account, offerid).pipeTo(sender)
+
+    case OfferServiceActor.getRecommended(account) =>
+      offerDAO.getRecommended(account).pipeTo(sender)
+
+    case OfferServiceActor.getPending(account) =>
+      offerDAO.getPending(account).pipeTo(sender)
+
+    case OfferServiceActor.getCompleted(account) =>
+      offerDAO.getCompleted(account).pipeTo(sender)
   }
 
 }
@@ -94,6 +106,33 @@ class OfferService private(actor: ActorRef) extends ActorWrapper(actor) {
 
     futureResult.map { result =>
       result.asInstanceOf[Option[Boolean]]
+    }
+  }
+
+  def getRecommended(account: Account)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+    implicit val timeout = OfferService.GetTimeout
+    val futureResult = actor ? OfferServiceActor.getRecommended(account)
+
+    futureResult.map { result =>
+      result.asInstanceOf[Seq[Offer]]
+    }
+  }
+
+  def getPending(account: Account)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+    implicit val timeout = OfferService.GetTimeout
+    val futureResult = actor ? OfferServiceActor.getPending(account)
+
+    futureResult.map { result =>
+      result.asInstanceOf[Seq[Offer]]
+    }
+  }
+
+  def getCompleted(account: Account)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+    implicit val timeout = OfferService.GetTimeout
+    val futureResult = actor ? OfferServiceActor.getCompleted(account)
+
+    futureResult.map { result =>
+      result.asInstanceOf[Seq[Offer]]
     }
   }
 

@@ -81,6 +81,36 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
 
   }
 
+  def getRecommended(account: Account)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+    val offerIDs = getRecommendedOfferIDs(account)
+
+    val offers = for {
+      ids <- offerIDs
+    } yield getOffers(account, ids.toSeq)
+
+    offers.flatMap(identity)
+  }
+
+  def getPending(account: Account)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+    val offerIDs = getPendingOfferIDs(account)
+
+    val offers = for {
+      ids <- offerIDs
+    } yield getOffers(account, ids.toSeq)
+
+    offers.flatMap(identity)
+  }
+
+  def getCompleted(account: Account)(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+    val offerIDs = getCompletedOfferIDs(account)
+
+    val offers = for {
+      ids <- offerIDs
+    } yield getOffers(account, ids.toSeq)
+
+    offers.flatMap(identity)
+  }
+
   def listBasic(lastID: Int)(implicit ec: ExecutionContext): Future[Seq[OfferBasicInfo]] = {
     val action = offers.filter(_.offerID > lastID).take(25).result
     db.run(action)
@@ -185,6 +215,37 @@ class PostgresOfferDataDAO(db: Database, cassandraBankDAO: CassandraBankDAO) ext
 
   private def isEligible (filters: List[Boolean], required: List[Boolean], hasPoints: Boolean)(implicit ec: ExecutionContext): Boolean = {
     !filters.contains(false) && !required.contains(false) && hasPoints
+  }
+
+  private def getRecommendedOfferIDs(account: Account)(implicit ec: ExecutionContext): Future[Vector[(Int)]] = {
+    val action = sql"SELECT public.getrecommended(#${account.id});".as[(Int)]
+    db.run(action)
+  }
+
+  private def getPendingOfferIDs(account: Account)(implicit ec: ExecutionContext): Future[Vector[(Int)]] = {
+    val action = sql"SELECT public.getpending(#${account.id});".as[(Int)]
+    db.run(action)
+  }
+
+  private def getCompletedOfferIDs(account: Account)(implicit ec: ExecutionContext): Future[Vector[(Int)]] = {
+    val action = sql"SELECT public.getcompleted(#${account.id});".as[(Int)]
+    db.run(action)
+  }
+
+  private def getOffers(account: Account, offerids: Seq[Int])(implicit ec: ExecutionContext): Future[Seq[Offer]] = {
+    val offerBasicInfo = offerids.map { id =>
+      getBasic(id)
+    }
+
+    val offers = for {
+      obi <- offerBasicInfo
+    } yield obi.map { ob =>
+      createOffer(account, ob.get)
+    }
+
+    Future.sequence(offers).flatMap {offer =>
+      Future.sequence(offer)
+    }
   }
 
 }

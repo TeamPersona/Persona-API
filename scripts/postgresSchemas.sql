@@ -631,4 +631,58 @@ END;
 $BODY$
   LANGUAGE plpgsql VOLATILE;
 
+CREATE OR REPLACE FUNCTION public.getrecommended(IN useridin bigint)
+  RETURNS TABLE(offeridout bigint) AS
+$BODY$
+DECLARE 
+BEGIN
+return query
+SELECT offerid FROM offers WHERE offers.offerid IN (1,2,3,4);
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE;
+
+CREATE OR REPLACE FUNCTION public.getpending(IN useridin bigint)
+  RETURNS TABLE(offeridout bigint) AS
+$BODY$
+DECLARE 
+BEGIN
+return query
+SELECT offerid FROM view_offerdata WHERE offerid IN (SELECT offers.offerid
+FROM offers
+INNER JOIN offerparticipation
+  ON offers.offerid = offerparticipation.offerid
+INNER JOIN offerstatus 
+  ON offers.offerstatusid = offerstatus.offerstatusid
+WHERE offerparticipation.userid = 1
+  AND (offerstatus.offerstatus = 'Active' OR offerstatus.offerstatus = 'Full'));
+
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE;
+
+
+CREATE OR REPLACE FUNCTION public.getcompleted(IN useridin bigint)
+  RETURNS TABLE(offeridout bigint) AS
+$BODY$
+DECLARE 
+BEGIN
+return query
+SELECT offerid FROM view_offerdata WHERE offerid IN (SELECT offers.offerid
+FROM offers
+INNER JOIN offerparticipation
+  ON offers.offerid = offerparticipation.offerid
+INNER JOIN offerstatus 
+  ON offers.offerstatusid = offerstatus.offerstatusid
+WHERE offerparticipation.userid = 1
+  AND (offerstatus.offerstatus = 'Complete'));
+
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE;
+
+
+
+
+
 
