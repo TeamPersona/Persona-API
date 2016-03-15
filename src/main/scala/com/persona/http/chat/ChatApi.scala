@@ -21,16 +21,18 @@ class ChatApi(chatService: ChatService, authorizationService: AuthorizationServi
   val route = get {
     pathPrefix("chat" / IntNumber) { offerId =>
       pathEndOrSingleSlash {
-        onComplete(chatService.chatDAO.demoGetMessage(offerId)) {
-          case Success(Some(msg)) =>
-            complete(DemoMessage(None, msg.msg, msg.timestamp).toJson.compactPrint)
+        oauth2Token { token =>
+          onComplete(chatService.chatDAO.demoGetMessage(offerId)) {
+            case Success(Some(msg)) =>
+              complete(DemoMessage(None, msg.msg, msg.timestamp).toJson.compactPrint)
 
-          case Success(None) =>
-            complete(StatusCodes.NotFound)
+            case Success(None) =>
+              complete(StatusCodes.NotFound)
 
-          case Failure(e) =>
-            complete(StatusCodes.InternalServerError)
+            case Failure(e) =>
+              complete(StatusCodes.InternalServerError)
 
+          }
         }
       }
 //      path("create") {
